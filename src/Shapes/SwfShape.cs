@@ -1,0 +1,428 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+
+using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.IEdge>>;
+using CoordMap = System.Collections.Generic.Dictionary<Microsoft.Xna.Framework.Point, System.Collections.Generic.List<SwiffCheese.IEdge>>;
+using Path = System.Collections.Generic.List<SwiffCheese.IEdge>;
+using SwfLib.Shapes.Records;
+using SwiffCheese.Wrappers;
+using SwfLib.Tags.ShapeTags;
+using SwfLib.Shapes.FillStyles;
+
+namespace SwiffCheese;
+
+public class SwfShape
+{
+    private readonly List<ShapeRecord> _records;
+    private readonly List<FillStyle> _fillStyles;
+    private readonly List<LineStyle> _lineStyles;
+
+    private readonly List<EdgeMap> _fillEdgesMaps = new();
+    private EdgeMap _currentFillEdgeMap = new();
+    private readonly List<EdgeMap> _lineEdgeMaps = new();
+    private EdgeMap _currentLineEdgeMap = new();
+    private int _numGroups = 0;
+    private readonly CoordMap _coordMap = new();
+    private readonly CoordMap _reverseCoordMap = new();
+    private bool _edgeMapsCreated = false;
+
+    public SwfShape(DefineShapeXTag shape)
+    {
+        _records = shape.ShapeRecords.ToList();
+        _fillStyles = shape.FillStyles.ToList();
+        _lineStyles = shape.LineStyles.ToList();
+    }
+
+    public void Export(IShapeExporter handler)
+    {
+        CreateEdgeMaps();
+        handler.BeginShape();
+        for (int i = 0; i < _numGroups; ++i)
+        {
+            ExportFillPath(handler, i);
+            ExportLinePath(handler, i);
+        }
+        handler.EndShape();
+    }
+
+    private void ExportFillPath(IShapeExporter exporter, int groundIndex)
+    {
+        Path path = PathFromEdgeMap(_fillEdgesMaps[groundIndex]);
+        if (path.Count == 0)
+            return;
+        Point pos = new(int.MaxValue, int.MaxValue);
+        int fillStyleIdx = int.MaxValue;
+        exporter.BeginFills();
+        foreach (IEdge edge in path)
+        {
+            if (fillStyleIdx != edge.FillStyleIndex)
+            {
+                if (fillStyleIdx != int.MaxValue)
+                    exporter.EndFill();
+
+                fillStyleIdx = edge.FillStyleIndex;
+                pos = new Point(int.MaxValue, int.MaxValue);
+                FillStyle? fillStyle = (fillStyleIdx == 0) ? null : _fillStyles[fillStyleIdx - 1];
+
+                if (fillStyle is null)
+                    exporter.BeginFill(Color.Black);
+                else
+                    switch (fillStyle.Type)
+                    {
+                        case FillStyleType.SolidColor:
+                            SolidFillStyle solidFillStyle = fillStyle.AsSolidFillStyle();
+                            exporter.BeginFill(solidFillStyle.Color.SwfColorToXnaColor());
+                            break;
+                        case FillStyleType.LinearGradient:
+                        case FillStyleType.RadialGradient:
+                        case FillStyleType.FocalGradient:
+                        case FillStyleType.RepeatingBitmap:
+                        case FillStyleType.ClippedBitmap:
+                        case FillStyleType.NonSmoothedRepeatingBitmap:
+                        case FillStyleType.NonSmoothedClippedBitmap:
+                            throw new NotImplementedException($"Unsupported fill style type {fillStyle.Type}");
+                        default:
+                            throw new ArgumentException($"Invalid fill style type {fillStyle.Type}");
+                    }
+            }
+
+            if (pos != edge.From)
+                exporter.MoveTo(edge.From);
+
+            if (edge is CurvedEdge cedge)
+                exporter.CurveTo(cedge.Control, cedge.To);
+            else
+                exporter.LineTo(edge.To);
+
+            pos = edge.To;
+        }
+
+        if (fillStyleIdx != int.MaxValue) exporter.EndFill();
+        exporter.EndFills();
+    }
+
+    private void ExportLinePath(IShapeExporter exporter, int groupIndex)
+    {
+        Path path = PathFromEdgeMap(_lineEdgeMaps[groupIndex]);
+        if (path.Count == 0)
+            return;
+        Point pos = new(int.MaxValue, int.MaxValue);
+        Point lastMove = pos;
+        int lineStyleIndex = int.MaxValue;
+
+        exporter.BeginLines();
+        foreach (IEdge edge in path)
+        {
+            if (lineStyleIndex != edge.LineStyleIndex)
+            {
+                lineStyleIndex = edge.LineStyleIndex;
+                pos = new Point(int.MaxValue, int.MaxValue);
+
+                if (lineStyleIndex == 0)
+                    exporter.LineStyle(0, Color.Black);
+                else
+                {
+                    LineStyle lineStyle = _lineStyles[lineStyleIndex - 1];
+                    exporter.LineStyle(lineStyle.Width, lineStyle.Color.SwfColorToXnaColor());
+                }
+            }
+
+            if (pos != edge.From)
+            {
+                exporter.MoveTo(edge.From);
+                lastMove = edge.From;
+            }
+
+            if (edge is CurvedEdge cedge)
+                exporter.CurveTo(cedge.Control, cedge.To);
+            else
+                exporter.LineTo(edge.To);
+
+            pos = edge.To;
+        }
+        exporter.EndLines(pos == lastMove);
+    }
+
+    private void CreateEdgeMaps()
+    {
+        if (_edgeMapsCreated)
+            return;
+        Point position = Point.Zero;
+        Point from;
+        Point to;
+        Point control;
+        int fillStyleIndexOffset = 0;
+        int lineStyleIndexOffset = 0;
+        int currentFillStyleIndex0 = 0;
+        int currentFillStyleIndex1 = 0;
+        int currentLineStyleIndex = 0;
+        Path subPath = new();
+        _numGroups = 0;
+        _fillEdgesMaps.Clear();
+        _lineEdgeMaps.Clear();
+        _currentFillEdgeMap.Clear();
+        _currentLineEdgeMap.Clear();
+
+        foreach (ShapeRecord shapeRecord in _records)
+        {
+            switch (shapeRecord.Type)
+            {
+                case ShapeRecordType.StyleChangeRecord:
+                    StyleChangeRecord styleChangeRecord = shapeRecord.AsStyleChangeRecord();
+                    if (styleChangeRecord.LineStyle is not null ||
+                        styleChangeRecord.FillStyle0 is not null ||
+                        styleChangeRecord.FillStyle1 is not null)
+                    {
+                        ProcessSubPath(subPath, currentLineStyleIndex, currentFillStyleIndex0, currentFillStyleIndex1);
+                        subPath.Clear();
+                    }
+
+                    if (styleChangeRecord.StateNewStyles)
+                    {
+                        fillStyleIndexOffset = _fillStyles.Count;
+                        lineStyleIndexOffset = _lineStyles.Count;
+                        _fillStyles.AddRange(styleChangeRecord.FillStyles.ToList());
+                        _lineStyles.AddRange(styleChangeRecord.LineStyles.ToList());
+                    }
+
+                    if (styleChangeRecord.LineStyle is not null && styleChangeRecord.LineStyle == 0 &&
+                        styleChangeRecord.FillStyle0 is not null && styleChangeRecord.FillStyle0 == 0 &&
+                        styleChangeRecord.FillStyle1 is not null && styleChangeRecord.FillStyle1 == 0)
+                    {
+                        CleanEdgeMap(_currentFillEdgeMap);
+                        CleanEdgeMap(_currentLineEdgeMap);
+                        _fillEdgesMaps.Add(_currentFillEdgeMap);
+                        _lineEdgeMaps.Add(_currentLineEdgeMap);
+                        //we must create new instead of Clear because the edge map lists hold a reference
+                        _currentFillEdgeMap = new EdgeMap();
+                        _currentLineEdgeMap = new EdgeMap();
+                        currentLineStyleIndex = 0;
+                        currentFillStyleIndex0 = 0;
+                        currentFillStyleIndex1 = 0;
+                        _numGroups++;
+                    }
+                    else
+                    {
+                        if (styleChangeRecord.LineStyle is not null)
+                        {
+                            currentLineStyleIndex = (int)styleChangeRecord.LineStyle;
+                            if (currentLineStyleIndex > 0) currentLineStyleIndex += lineStyleIndexOffset;
+                        }
+                        if (styleChangeRecord.FillStyle0 is not null)
+                        {
+                            currentFillStyleIndex0 = (int)styleChangeRecord.FillStyle0;
+                            if (currentFillStyleIndex0 > 0) currentFillStyleIndex0 += fillStyleIndexOffset;
+                        }
+                        if (styleChangeRecord.FillStyle1 is not null)
+                        {
+                            currentFillStyleIndex1 = (int)styleChangeRecord.FillStyle1;
+                            if (currentFillStyleIndex1 > 0) currentFillStyleIndex1 += fillStyleIndexOffset;
+                        }
+                    }
+
+                    if (styleChangeRecord.StateMoveTo)
+                    {
+                        position = new Point(styleChangeRecord.MoveDeltaX, styleChangeRecord.MoveDeltaY);
+                    }
+                    break;
+                case ShapeRecordType.StraightEdge:
+                    StraightEdgeShapeRecord straightEdgeRecord = shapeRecord.AsStraightEdgeRecord();
+                    from = new Point(position.X, position.Y);
+                    Point delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
+                    position += delta;
+                    to = new Point(position.X, position.Y);
+                    subPath.Add(new StraightEdge { From = from, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
+                    break;
+                case ShapeRecordType.CurvedEdgeRecord:
+                    CurvedEdgeShapeRecord curvedEdgeRecord = shapeRecord.AsCurvedEdgeRecord();
+                    from = new Point(position.X, position.Y);
+                    Point controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
+                    control = position + controlDelta;
+                    Point anchorDelta = new(curvedEdgeRecord.AnchorDeltaX, curvedEdgeRecord.AnchorDeltaY);
+                    position = control + anchorDelta;
+                    to = new Point(position.X, position.Y);
+                    subPath.Add(new CurvedEdge { From = from, Control = control, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
+                    break;
+                case ShapeRecordType.EndRecord:
+                    ProcessSubPath(subPath, currentLineStyleIndex, currentFillStyleIndex0, currentFillStyleIndex1);
+                    CleanEdgeMap(_currentFillEdgeMap);
+                    CleanEdgeMap(_currentLineEdgeMap);
+                    _fillEdgesMaps.Add(_currentFillEdgeMap);
+                    _lineEdgeMaps.Add(_currentLineEdgeMap);
+                    _numGroups++;
+                    break;
+                default:
+                    throw new ArgumentException($"Invalid record type {shapeRecord.GetType().Name}");
+            }
+        }
+
+        _edgeMapsCreated = true;
+    }
+
+    private void ProcessSubPath(Path subPath, int lineStyleIdx, int fillStyleIdx0, int fillStyleIdx1)
+    {
+        if (fillStyleIdx0 != 0)
+        {
+            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx0)) _currentFillEdgeMap[fillStyleIdx0] = new();
+            _currentFillEdgeMap[fillStyleIdx0].AddRange(
+                subPath.Select(e => e.ReverseWithStyle(fillStyleIdx0)).Reverse()
+            );
+        }
+
+        if (fillStyleIdx1 != 0)
+        {
+            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx1)) _currentFillEdgeMap[fillStyleIdx1] = new();
+
+            _currentFillEdgeMap[fillStyleIdx1].AddRange(subPath);
+        }
+
+        if (lineStyleIdx != 0)
+        {
+            if (!_currentLineEdgeMap.ContainsKey(lineStyleIdx)) _currentLineEdgeMap[lineStyleIdx] = new();
+
+            _currentLineEdgeMap[lineStyleIdx].AddRange(subPath);
+        }
+    }
+
+    private void CleanEdgeMap(EdgeMap edgeMap)
+    {
+        foreach ((int styleIdx, List<IEdge> subPath) in edgeMap)
+        {
+            if (subPath.Count == 0) continue;
+            IEdge? prevEdge = null;
+            IEdge? edge;
+            Path tmpPath = new();
+            CreateCoordMap(subPath);
+            CreateReverseCoordMap(subPath);
+            while (subPath.Count > 0)
+            {
+                int index = 0;
+                while (index < subPath.Count)
+                {
+                    if (prevEdge is not null)
+                    {
+                        if (prevEdge.To != subPath[index].From)
+                        {
+                            edge = FindNextEdgeInCoordMap(prevEdge);
+                            if (edge is not null)
+                            {
+                                index = subPath.IndexOf(edge);
+                            }
+                            else
+                            {
+                                IEdge? revEdge = FindNextEdgeInReverseCoordMap(prevEdge);
+                                if (revEdge is not null)
+                                {
+                                    index = subPath.IndexOf(revEdge);
+                                    IEdge r = revEdge.ReverseWithStyle(revEdge.FillStyleIndex);
+                                    UpdateEdgeInCoordMap(revEdge, r);
+                                    UpdateEdgeIn_reverseCoordMap(revEdge, r);
+                                    subPath[index] = r;
+                                }
+                                else
+                                {
+                                    index = 0;
+                                    prevEdge = null;
+                                }
+                            }
+
+                            continue;
+                        }
+                    }
+
+                    edge = subPath[index];
+                    subPath.RemoveAt(index);
+                    tmpPath.Add(edge);
+                    RemoveEdgeFromCoordMap(edge);
+                    RemoveEdgeFromReverseCoordMap(edge);
+                    prevEdge = edge;
+                }
+            }
+            edgeMap[styleIdx] = tmpPath;
+        }
+    }
+
+    private IEdge? FindNextEdgeInCoordMap(IEdge edge)
+    {
+        Point key = edge.To;
+        if (!_coordMap.TryGetValue(key, out Path? path))
+            return null;
+        if (path.Count == 0)
+            return null;
+        return path[0];
+    }
+
+    private IEdge? FindNextEdgeInReverseCoordMap(IEdge edge)
+    {
+        Point key = edge.To;
+        if (!_reverseCoordMap.TryGetValue(key, out Path? path))
+            return null;
+        if (path.Count == 0)
+            return null;
+        return path[0];
+    }
+
+    private void RemoveEdgeFromCoordMap(IEdge edge)
+    {
+        Point key = edge.From;
+        if (_coordMap.ContainsKey(key))
+        {
+            if (_coordMap[key].Count == 1) _coordMap.Remove(key);
+            else _coordMap[key].Remove(edge);
+        }
+    }
+
+    private void RemoveEdgeFromReverseCoordMap(IEdge edge)
+    {
+        Point key = edge.To;
+        if (_reverseCoordMap.ContainsKey(key))
+        {
+            if (_reverseCoordMap[key].Count == 1) _reverseCoordMap.Remove(key);
+            else _reverseCoordMap[key].Remove(edge);
+        }
+    }
+
+    private void CreateCoordMap(Path path)
+    {
+        _coordMap.Clear();
+        for (int i = 0; i < path.Count; ++i)
+        {
+            Point key = path[i].From;
+            if (!_coordMap.ContainsKey(key)) _coordMap[key] = new();
+            _coordMap[key].Add(path[i]);
+        }
+    }
+
+    private void CreateReverseCoordMap(Path path)
+    {
+        _reverseCoordMap.Clear();
+        for (int i = 0; i < path.Count; ++i)
+        {
+            Point key = path[i].To;
+            if (!_reverseCoordMap.ContainsKey(key)) _reverseCoordMap[key] = new();
+            _reverseCoordMap[key].Add(path[i]);
+        }
+    }
+
+    private void UpdateEdgeInCoordMap(IEdge edge, IEdge newEdge)
+    {
+        Point key1 = edge.From;
+        _coordMap[key1].Remove(edge);
+        Point key2 = newEdge.From;
+        if (!_coordMap.ContainsKey(key2)) _coordMap[key2] = new();
+        _coordMap[key2].Add(newEdge);
+    }
+
+    private void UpdateEdgeIn_reverseCoordMap(IEdge edge, IEdge newEdge)
+    {
+        Point key1 = edge.To;
+        _reverseCoordMap[key1].Remove(edge);
+        Point key2 = newEdge.To;
+        if (!_reverseCoordMap.ContainsKey(key2)) _reverseCoordMap[key2] = new();
+        _reverseCoordMap[key2].Add(newEdge);
+    }
+
+    private static Path PathFromEdgeMap(EdgeMap edgeMap) => edgeMap.Keys.OrderBy(i => i).SelectMany(i => edgeMap[i]).ToList();
+}
