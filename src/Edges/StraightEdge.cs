@@ -1,6 +1,6 @@
-using Microsoft.Xna.Framework;
+using SixLabors.ImageSharp;
 
-namespace SwiffCheese;
+namespace SwiffCheese.Edges;
 
 public class StraightEdge : IEdge
 {
@@ -13,7 +13,7 @@ public class StraightEdge : IEdge
     {
         From = To,
         To = From,
-        FillStyleIndex = FillStyleIndex,
+        FillStyleIndex = newFillStyleIndex,
         LineStyleIndex = LineStyleIndex,
         IsReverseEdge = !IsReverseEdge,
     };

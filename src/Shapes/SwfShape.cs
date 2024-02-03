@@ -1,17 +1,19 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-
-using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.IEdge>>;
-using CoordMap = System.Collections.Generic.Dictionary<Microsoft.Xna.Framework.Point, System.Collections.Generic.List<SwiffCheese.IEdge>>;
-using Path = System.Collections.Generic.List<SwiffCheese.IEdge>;
 using SwfLib.Shapes.Records;
-using SwiffCheese.Wrappers;
-using SwfLib.Tags.ShapeTags;
 using SwfLib.Shapes.FillStyles;
+using SixLabors.ImageSharp;
+using SwiffCheese.Edges;
+using SwiffCheese.Exporting;
+using SwiffCheese.Wrappers;
+using SwiffCheese.Utils;
 
-namespace SwiffCheese;
+using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
+using CoordMap = System.Collections.Generic.Dictionary<SixLabors.ImageSharp.Point, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
+using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
+
+namespace SwiffCheese.Shapes;
 
 public class SwfShape
 {
@@ -47,9 +49,9 @@ public class SwfShape
         handler.EndShape();
     }
 
-    private void ExportFillPath(IShapeExporter exporter, int groundIndex)
+    private void ExportFillPath(IShapeExporter exporter, int groupIndex)
     {
-        Path path = PathFromEdgeMap(_fillEdgesMaps[groundIndex]);
+        Path path = PathFromEdgeMap(_fillEdgesMaps[groupIndex]);
         if (path.Count == 0)
             return;
         Point pos = new(int.MaxValue, int.MaxValue);
@@ -73,7 +75,7 @@ public class SwfShape
                     {
                         case FillStyleType.SolidColor:
                             SolidFillStyle solidFillStyle = fillStyle.AsSolidFillStyle();
-                            exporter.BeginFill(solidFillStyle.Color.SwfColorToXnaColor());
+                            exporter.BeginFill(solidFillStyle.Color.SwfColorToImageSharpColor());
                             break;
                         case FillStyleType.LinearGradient:
                         case FillStyleType.RadialGradient:
@@ -125,7 +127,7 @@ public class SwfShape
                 else
                 {
                     LineStyle lineStyle = _lineStyles[lineStyleIndex - 1];
-                    exporter.LineStyle(lineStyle.Width, lineStyle.Color.SwfColorToXnaColor());
+                    exporter.LineStyle(lineStyle.Width, lineStyle.Color.SwfColorToImageSharpColor());
                 }
             }
 
@@ -149,7 +151,7 @@ public class SwfShape
     {
         if (_edgeMapsCreated)
             return;
-        Point position = Point.Zero;
+        Point position = Point.Empty;
         Point from;
         Point to;
         Point control;
@@ -230,7 +232,7 @@ public class SwfShape
                 case ShapeRecordType.StraightEdge:
                     StraightEdgeShapeRecord straightEdgeRecord = shapeRecord.AsStraightEdgeRecord();
                     from = new Point(position.X, position.Y);
-                    Point delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
+                    Size delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
                     position += delta;
                     to = new Point(position.X, position.Y);
                     subPath.Add(new StraightEdge { From = from, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
@@ -238,9 +240,9 @@ public class SwfShape
                 case ShapeRecordType.CurvedEdgeRecord:
                     CurvedEdgeShapeRecord curvedEdgeRecord = shapeRecord.AsCurvedEdgeRecord();
                     from = new Point(position.X, position.Y);
-                    Point controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
+                    Size controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
                     control = position + controlDelta;
-                    Point anchorDelta = new(curvedEdgeRecord.AnchorDeltaX, curvedEdgeRecord.AnchorDeltaY);
+                    Size anchorDelta = new(curvedEdgeRecord.AnchorDeltaX, curvedEdgeRecord.AnchorDeltaY);
                     position = control + anchorDelta;
                     to = new Point(position.X, position.Y);
                     subPath.Add(new CurvedEdge { From = from, Control = control, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
@@ -254,7 +256,7 @@ public class SwfShape
                     _numGroups++;
                     break;
                 default:
-                    throw new ArgumentException($"Invalid record type {shapeRecord.GetType().Name}");
+                    throw new ArgumentException($"Invalid record type {shapeRecord.Type}");
             }
         }
 
@@ -318,7 +320,7 @@ public class SwfShape
                                     index = subPath.IndexOf(revEdge);
                                     IEdge r = revEdge.ReverseWithStyle(revEdge.FillStyleIndex);
                                     UpdateEdgeInCoordMap(revEdge, r);
-                                    UpdateEdgeIn_reverseCoordMap(revEdge, r);
+                                    UpdateEdgeInReverseCoordMap(revEdge, r);
                                     subPath[index] = r;
                                 }
                                 else
@@ -415,7 +417,7 @@ public class SwfShape
         _coordMap[key2].Add(newEdge);
     }
 
-    private void UpdateEdgeIn_reverseCoordMap(IEdge edge, IEdge newEdge)
+    private void UpdateEdgeInReverseCoordMap(IEdge edge, IEdge newEdge)
     {
         Point key1 = edge.To;
         _reverseCoordMap[key1].Remove(edge);

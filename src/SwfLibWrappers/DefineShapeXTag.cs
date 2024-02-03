@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OneOf;
-using SwfLib.Shapes.Records;
+using SwfLib.Data;
 using SwfLib.Tags.ShapeTags;
 
 namespace SwiffCheese.Wrappers;
@@ -53,5 +53,17 @@ public class DefineShapeXTag
         (DefineShapeTag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
         (DefineShape2Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
         (DefineShape3Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_))
+    );
+
+    public ushort ShapeID => _internal.Match(
+        (DefineShapeTag shape) => shape.ShapeID,
+        (DefineShape2Tag shape) => shape.ShapeID,
+        (DefineShape3Tag shape) => shape.ShapeID
+    );
+
+    public SwfRect ShapeBounds => _internal.Match(
+        (DefineShapeTag shape) => shape.ShapeBounds,
+        (DefineShape2Tag shape) => shape.ShapeBounds,
+        (DefineShape3Tag shape) => shape.ShapeBounds
     );
 }

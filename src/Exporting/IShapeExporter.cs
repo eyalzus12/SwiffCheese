@@ -1,6 +1,6 @@
-using Microsoft.Xna.Framework;
+using SixLabors.ImageSharp;
 
-namespace SwiffCheese;
+namespace SwiffCheese.Exporting;
 
 public interface IShapeExporter
 {
