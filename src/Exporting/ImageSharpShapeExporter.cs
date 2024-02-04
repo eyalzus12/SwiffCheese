@@ -11,8 +11,8 @@ public class ImageSharpShapeExporter : IShapeExporter
     private readonly PathBuilder _builder = new();
     private readonly Image<Rgba32> _canvas;
     private readonly Size _offset;
-    private IBrush? _fill;
-    private IPen? _line;
+    private Brush? _fill;
+    private Pen? _line;
 
     public ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default)
     {
@@ -65,7 +65,7 @@ public class ImageSharpShapeExporter : IShapeExporter
     public void LineStyle(float thickness = float.NaN, Color color = default)
     {
         FinalizePath();
-        _line = new Pen(color, float.IsNaN(thickness) ? 1 : thickness);
+        _line = new SolidPen(color, float.IsNaN(thickness) ? 1 : thickness);
     }
 
     public void MoveTo(Point pos)
