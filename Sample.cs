@@ -79,7 +79,7 @@ public class Sample
             throw new Exception("No matching symbol id found in swf");
         }
 
-        HashSet<ushort> shapeIds = new();
+        HashSet<ushort> shapeIds = [];
         //go over place object tags
         foreach(SwfTagBase tag in sprite.Tags)
         {

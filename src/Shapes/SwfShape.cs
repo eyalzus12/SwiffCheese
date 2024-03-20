@@ -21,13 +21,13 @@ public class SwfShape
     private readonly List<FillStyle> _fillStyles;
     private readonly List<LineStyle> _lineStyles;
 
-    private readonly List<EdgeMap> _fillEdgesMaps = new();
-    private EdgeMap _currentFillEdgeMap = new();
-    private readonly List<EdgeMap> _lineEdgeMaps = new();
-    private EdgeMap _currentLineEdgeMap = new();
+    private readonly List<EdgeMap> _fillEdgesMaps = [];
+    private EdgeMap _currentFillEdgeMap = [];
+    private readonly List<EdgeMap> _lineEdgeMaps = [];
+    private EdgeMap _currentLineEdgeMap = [];
     private int _numGroups = 0;
-    private readonly CoordMap _coordMap = new();
-    private readonly CoordMap _reverseCoordMap = new();
+    private readonly CoordMap _coordMap = [];
+    private readonly CoordMap _reverseCoordMap = [];
     private bool _edgeMapsCreated = false;
 
     public SwfShape(DefineShapeXTag shape)
@@ -160,7 +160,7 @@ public class SwfShape
         int currentFillStyleIndex0 = 0;
         int currentFillStyleIndex1 = 0;
         int currentLineStyleIndex = 0;
-        Path subPath = new();
+        Path subPath = [];
         _numGroups = 0;
         _fillEdgesMaps.Clear();
         _lineEdgeMaps.Clear();
@@ -198,8 +198,8 @@ public class SwfShape
                         _fillEdgesMaps.Add(_currentFillEdgeMap);
                         _lineEdgeMaps.Add(_currentLineEdgeMap);
                         //we must create new instead of Clear because the edge map lists hold a reference
-                        _currentFillEdgeMap = new EdgeMap();
-                        _currentLineEdgeMap = new EdgeMap();
+                        _currentFillEdgeMap = [];
+                        _currentLineEdgeMap = [];
                         currentLineStyleIndex = 0;
                         currentFillStyleIndex0 = 0;
                         currentFillStyleIndex1 = 0;
@@ -267,7 +267,7 @@ public class SwfShape
     {
         if (fillStyleIdx0 != 0)
         {
-            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx0)) _currentFillEdgeMap[fillStyleIdx0] = new();
+            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx0)) _currentFillEdgeMap[fillStyleIdx0] = [];
             _currentFillEdgeMap[fillStyleIdx0].AddRange(
                 subPath.Select(e => e.ReverseWithStyle(fillStyleIdx0)).Reverse()
             );
@@ -275,14 +275,14 @@ public class SwfShape
 
         if (fillStyleIdx1 != 0)
         {
-            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx1)) _currentFillEdgeMap[fillStyleIdx1] = new();
+            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx1)) _currentFillEdgeMap[fillStyleIdx1] = [];
 
             _currentFillEdgeMap[fillStyleIdx1].AddRange(subPath);
         }
 
         if (lineStyleIdx != 0)
         {
-            if (!_currentLineEdgeMap.ContainsKey(lineStyleIdx)) _currentLineEdgeMap[lineStyleIdx] = new();
+            if (!_currentLineEdgeMap.ContainsKey(lineStyleIdx)) _currentLineEdgeMap[lineStyleIdx] = [];
 
             _currentLineEdgeMap[lineStyleIdx].AddRange(subPath);
         }
@@ -290,12 +290,12 @@ public class SwfShape
 
     private void CleanEdgeMap(EdgeMap edgeMap)
     {
-        foreach ((int styleIdx, List<IEdge> subPath) in edgeMap)
+        foreach ((int styleIdx, Path subPath) in edgeMap)
         {
             if (subPath.Count == 0) continue;
             IEdge? prevEdge = null;
             IEdge? edge;
-            Path tmpPath = new();
+            Path tmpPath = [];
             CreateCoordMap(subPath);
             CreateReverseCoordMap(subPath);
             while (subPath.Count > 0)
@@ -369,9 +369,9 @@ public class SwfShape
     private void RemoveEdgeFromCoordMap(IEdge edge)
     {
         Point key = edge.From;
-        if (_coordMap.ContainsKey(key))
+        if (_coordMap.TryGetValue(key, out Path? value))
         {
-            if (_coordMap[key].Count == 1) _coordMap.Remove(key);
+            if (value.Count == 1) _coordMap.Remove(key);
             else _coordMap[key].Remove(edge);
         }
     }
@@ -379,9 +379,9 @@ public class SwfShape
     private void RemoveEdgeFromReverseCoordMap(IEdge edge)
     {
         Point key = edge.To;
-        if (_reverseCoordMap.ContainsKey(key))
+        if (_reverseCoordMap.TryGetValue(key, out Path? value))
         {
-            if (_reverseCoordMap[key].Count == 1) _reverseCoordMap.Remove(key);
+            if (value.Count == 1) _reverseCoordMap.Remove(key);
             else _reverseCoordMap[key].Remove(edge);
         }
     }
@@ -392,7 +392,7 @@ public class SwfShape
         for (int i = 0; i < path.Count; ++i)
         {
             Point key = path[i].From;
-            if (!_coordMap.ContainsKey(key)) _coordMap[key] = new();
+            if (!_coordMap.ContainsKey(key)) _coordMap[key] = [];
             _coordMap[key].Add(path[i]);
         }
     }
@@ -403,7 +403,7 @@ public class SwfShape
         for (int i = 0; i < path.Count; ++i)
         {
             Point key = path[i].To;
-            if (!_reverseCoordMap.ContainsKey(key)) _reverseCoordMap[key] = new();
+            if (!_reverseCoordMap.ContainsKey(key)) _reverseCoordMap[key] = [];
             _reverseCoordMap[key].Add(path[i]);
         }
     }
@@ -413,7 +413,7 @@ public class SwfShape
         Point key1 = edge.From;
         _coordMap[key1].Remove(edge);
         Point key2 = newEdge.From;
-        if (!_coordMap.ContainsKey(key2)) _coordMap[key2] = new();
+        if (!_coordMap.ContainsKey(key2)) _coordMap[key2] = [];
         _coordMap[key2].Add(newEdge);
     }
 
@@ -422,7 +422,7 @@ public class SwfShape
         Point key1 = edge.To;
         _reverseCoordMap[key1].Remove(edge);
         Point key2 = newEdge.To;
-        if (!_reverseCoordMap.ContainsKey(key2)) _reverseCoordMap[key2] = new();
+        if (!_reverseCoordMap.ContainsKey(key2)) _reverseCoordMap[key2] = [];
         _reverseCoordMap[key2].Add(newEdge);
     }
 
