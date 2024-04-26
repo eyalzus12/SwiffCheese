@@ -6,23 +6,15 @@ using SixLabors.ImageSharp.Processing;
 
 namespace SwiffCheese.Exporting;
 
-public class ImageSharpShapeExporter : IShapeExporter
+public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default) : IShapeExporter
 {
     private readonly PathBuilder _builder = new();
-    private readonly Image<Rgba32> _canvas;
-    private readonly Size _offset;
     private Brush? _fill;
     private Pen? _line;
 
-    public ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default)
-    {
-        _canvas = canvas;
-        _offset = offset;
-    }
-
     public void BeginShape()
     {
-        _builder.MoveTo((Point)_offset);
+        _builder.MoveTo((Point)offset);
     }
 
     public void EndShape()
@@ -47,7 +39,7 @@ public class ImageSharpShapeExporter : IShapeExporter
 
     public void EndLines(bool close)
     {
-        if(close) _builder.CloseFigure();
+        if (close) _builder.CloseFigure();
         FinalizePath();
     }
 
@@ -70,17 +62,17 @@ public class ImageSharpShapeExporter : IShapeExporter
 
     public void MoveTo(Point pos)
     {
-        _builder.MoveTo(Point.Add(pos, _offset));
+        _builder.MoveTo(Point.Add(pos, offset));
     }
 
     public void LineTo(Point pos)
     {
-        _builder.LineTo(Point.Add(pos, _offset));
+        _builder.LineTo(Point.Add(pos, offset));
     }
 
     public void CurveTo(Point anchor, Point to)
     {
-        _builder.QuadraticBezierTo(Point.Add(anchor, _offset), Point.Add(to, _offset));
+        _builder.QuadraticBezierTo(Point.Add(anchor, offset), Point.Add(to, offset));
     }
 
     public void FinalizePath()
@@ -89,14 +81,14 @@ public class ImageSharpShapeExporter : IShapeExporter
 
         if (_fill is not null)
         {
-            _canvas.Mutate(x => x.Fill(_fill, path));
+            canvas.Mutate(x => x.Fill(_fill, path));
         }
         if (_line is not null)
         {
-            _canvas.Mutate(x => x.Draw(_line, path));
+            canvas.Mutate(x => x.Draw(_line, path));
         }
 
-        _builder.Clear(); _builder.MoveTo((Point)_offset);
+        _builder.Clear(); _builder.MoveTo((Point)offset);
         _fill = null;
         _line = null;
     }

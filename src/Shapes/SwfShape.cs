@@ -15,11 +15,11 @@ using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
 
 namespace SwiffCheese.Shapes;
 
-public class SwfShape
+public class SwfShape(DefineShapeXTag shape)
 {
-    private readonly List<ShapeRecord> _records;
-    private readonly List<FillStyle> _fillStyles;
-    private readonly List<LineStyle> _lineStyles;
+    private readonly List<ShapeRecord> _records = shape.ShapeRecords.ToList();
+    private readonly List<FillStyle> _fillStyles = shape.FillStyles.ToList();
+    private readonly List<LineStyle> _lineStyles = shape.LineStyles.ToList();
 
     private readonly List<EdgeMap> _fillEdgesMaps = [];
     private EdgeMap _currentFillEdgeMap = [];
@@ -29,13 +29,6 @@ public class SwfShape
     private readonly CoordMap _coordMap = [];
     private readonly CoordMap _reverseCoordMap = [];
     private bool _edgeMapsCreated = false;
-
-    public SwfShape(DefineShapeXTag shape)
-    {
-        _records = shape.ShapeRecords.ToList();
-        _fillStyles = shape.FillStyles.ToList();
-        _lineStyles = shape.LineStyles.ToList();
-    }
 
     public void Export(IShapeExporter handler)
     {
