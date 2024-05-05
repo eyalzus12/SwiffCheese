@@ -8,7 +8,7 @@ namespace SwiffCheese.Wrappers;
 public class StyleChangeRecord
 {
     private readonly OneOf<StyleChangeShapeRecordRGB, StyleChangeShapeRecordRGBA> _internal;
-    
+
     public StyleChangeRecord(StyleChangeShapeRecordRGB rgb)
     {
         _internal = rgb;

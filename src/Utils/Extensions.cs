@@ -10,7 +10,7 @@ public static class Extensions
     {
         return Color.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
     }
-    
+
     public static int Width(this SwfRect rect) => rect.XMax - rect.XMin;
     public static int Height(this SwfRect rect) => rect.YMax - rect.YMin;
 }
