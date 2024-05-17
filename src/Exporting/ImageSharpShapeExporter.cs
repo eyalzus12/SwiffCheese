@@ -1,3 +1,4 @@
+using System.Numerics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -6,15 +7,17 @@ using SixLabors.ImageSharp.Processing;
 
 namespace SwiffCheese.Exporting;
 
-public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default) : IShapeExporter
+public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default, float unitDivisor = 1) : IShapeExporter
 {
     private readonly PathBuilder _builder = new();
     private Brush? _fill;
     private Pen? _line;
 
+    private Vector2 GetRealLocation(Point point) => ((Vector2)(point + offset)) / unitDivisor;
+
     public void BeginShape()
     {
-        _builder.MoveTo((Point)offset);
+        _builder.MoveTo(GetRealLocation(Point.Empty));
     }
 
     public void EndShape()
@@ -62,17 +65,17 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default
 
     public void MoveTo(Point pos)
     {
-        _builder.MoveTo(Point.Add(pos, offset));
+        _builder.MoveTo(GetRealLocation(pos));
     }
 
     public void LineTo(Point pos)
     {
-        _builder.LineTo(Point.Add(pos, offset));
+        _builder.LineTo(GetRealLocation(pos));
     }
 
     public void CurveTo(Point anchor, Point to)
     {
-        _builder.QuadraticBezierTo(Point.Add(anchor, offset), Point.Add(to, offset));
+        _builder.QuadraticBezierTo(GetRealLocation(anchor), GetRealLocation(to));
     }
 
     public void FinalizePath()
@@ -88,7 +91,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default
             canvas.Mutate(x => x.Draw(_line, path));
         }
 
-        _builder.Clear(); _builder.MoveTo((Point)offset);
+        _builder.Clear(); _builder.MoveTo(GetRealLocation(Point.Empty));
         _fill = null;
         _line = null;
     }
