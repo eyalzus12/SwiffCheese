@@ -9,6 +9,13 @@ namespace SwiffCheese.Exporting;
 
 public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default, float unitDivisor = 1) : IShapeExporter
 {
+    private static readonly DrawingOptions _DrawingOptions = new()
+    {
+        GraphicsOptions = new GraphicsOptions()
+        {
+            Antialias = false,
+        }
+    };
     private readonly PathBuilder _builder = new();
     private Brush? _fill;
     private Pen? _line;
@@ -84,11 +91,11 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Size offset = default
 
         if (_fill is not null)
         {
-            canvas.Mutate(x => x.Fill(_fill, path));
+            canvas.Mutate(x => x.Fill(_DrawingOptions, _fill, path));
         }
         if (_line is not null)
         {
-            canvas.Mutate(x => x.Draw(_line, path));
+            canvas.Mutate(x => x.Draw(_DrawingOptions, _line, path));
         }
 
         _builder.Clear(); _builder.MoveTo(GetRealLocation(Point.Empty));
