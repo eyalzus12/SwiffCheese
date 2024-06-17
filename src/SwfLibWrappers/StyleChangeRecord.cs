@@ -5,19 +5,12 @@ using SwfLib.Shapes.Records;
 
 namespace SwiffCheese.Wrappers;
 
-public class StyleChangeRecord
+public readonly struct StyleChangeRecord
 {
     private readonly OneOf<StyleChangeShapeRecordRGB, StyleChangeShapeRecordRGBA> _internal;
 
-    public StyleChangeRecord(StyleChangeShapeRecordRGB rgb)
-    {
-        _internal = rgb;
-    }
-
-    public StyleChangeRecord(StyleChangeShapeRecordRGBA rgba)
-    {
-        _internal = rgba;
-    }
+    public StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => _internal = rgb;
+    public StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => _internal = rgba;
 
     public uint? FillStyle0 => _internal.Match(
         (StyleChangeShapeRecordRGB rgb) => rgb.FillStyle0,

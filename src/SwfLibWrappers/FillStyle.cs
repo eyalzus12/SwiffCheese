@@ -3,19 +3,12 @@ using SwfLib.Shapes.FillStyles;
 
 namespace SwiffCheese.Wrappers;
 
-public class FillStyle
+public readonly struct FillStyle
 {
     private readonly OneOf<FillStyleRGB, FillStyleRGBA> _internal;
 
-    public FillStyle(FillStyleRGB rgb)
-    {
-        _internal = rgb;
-    }
-
-    public FillStyle(FillStyleRGBA rgba)
-    {
-        _internal = rgba;
-    }
+    public FillStyle(FillStyleRGB rgb) => _internal = rgb;
+    public FillStyle(FillStyleRGBA rgba) => _internal = rgba;
 
     public FillStyleType Type => _internal.Match(
         (FillStyleRGB rgb) => rgb.Type,
@@ -27,6 +20,22 @@ public class FillStyle
         return _internal.Match(
             (FillStyleRGB rgb) => new SolidFillStyle((SolidFillStyleRGB)rgb),
             (FillStyleRGBA rgba) => new SolidFillStyle((SolidFillStyleRGBA)rgba)
+        );
+    }
+
+    public LinearGradientFillStyle AsLinearGradientFillStyle()
+    {
+        return _internal.Match(
+            (FillStyleRGB rgb) => new LinearGradientFillStyle((LinearGradientFillStyleRGB)rgb),
+            (FillStyleRGBA rgba) => new LinearGradientFillStyle((LinearGradientFillStyleRGBA)rgba)
+        );
+    }
+
+    public RadialGradientFillStyle AsRadialGradientFillStyle()
+    {
+        return _internal.Match(
+            (FillStyleRGB rgb) => new RadialGradientFillStyle((RadialGradientFillStyleRGB)rgb),
+            (FillStyleRGBA rgba) => new RadialGradientFillStyle((RadialGradientFillStyleRGBA)rgba)
         );
     }
 }

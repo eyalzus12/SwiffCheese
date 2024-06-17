@@ -7,7 +7,7 @@ using SwfLib.Tags.ShapeTags;
 
 namespace SwiffCheese.Wrappers;
 
-public class DefineShapeXTag
+public readonly struct DefineShapeXTag
 {
     private readonly OneOf<DefineShapeTag, DefineShape2Tag, DefineShape3Tag> _internal;
 
@@ -22,20 +22,9 @@ public class DefineShapeXTag
         };
     }
 
-    public DefineShapeXTag(DefineShapeTag shape)
-    {
-        _internal = shape;
-    }
-
-    public DefineShapeXTag(DefineShape2Tag shape)
-    {
-        _internal = shape;
-    }
-
-    public DefineShapeXTag(DefineShape3Tag shape)
-    {
-        _internal = shape;
-    }
+    public DefineShapeXTag(DefineShapeTag shape) => _internal = shape;
+    public DefineShapeXTag(DefineShape2Tag shape) => _internal = shape;
+    public DefineShapeXTag(DefineShape3Tag shape) => _internal = shape;
 
     public IEnumerable<FillStyle> FillStyles => _internal.Match(
         (DefineShapeTag shape) => shape.FillStyles.Select(_ => new FillStyle(_)),

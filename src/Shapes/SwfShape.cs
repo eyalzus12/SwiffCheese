@@ -59,11 +59,12 @@ public class SwfShape(DefineShapeXTag shape)
 
                 fillStyleIdx = edge.FillStyleIndex;
                 pos = new Point(int.MaxValue, int.MaxValue);
-                FillStyle? fillStyle = (fillStyleIdx == 0) ? null : _fillStyles[fillStyleIdx - 1];
 
-                if (fillStyle is null)
+                if (fillStyleIdx == 0)
                     exporter.BeginFill(Color.Black);
                 else
+                {
+                    FillStyle fillStyle = _fillStyles[fillStyleIdx - 1];
                     switch (fillStyle.Type)
                     {
                         case FillStyleType.SolidColor:
@@ -81,6 +82,7 @@ public class SwfShape(DefineShapeXTag shape)
                         default:
                             throw new ArgumentException($"Invalid fill style type {fillStyle.Type}");
                     }
+                }
             }
 
             if (pos != edge.From)

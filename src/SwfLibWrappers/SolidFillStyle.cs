@@ -3,19 +3,12 @@ using SwfLib.Shapes.FillStyles;
 
 namespace SwiffCheese.Wrappers;
 
-public class SolidFillStyle
+public readonly struct SolidFillStyle
 {
     private readonly OneOf<SolidFillStyleRGB, SolidFillStyleRGBA> _internal;
 
-    public SolidFillStyle(SolidFillStyleRGB rgb)
-    {
-        _internal = rgb;
-    }
-
-    public SolidFillStyle(SolidFillStyleRGBA rgba)
-    {
-        _internal = rgba;
-    }
+    public SolidFillStyle(SolidFillStyleRGB rgb) => _internal = rgb;
+    public SolidFillStyle(SolidFillStyleRGBA rgba) => _internal = rgba;
 
     public SwfColor Color => _internal.Match(
         (SolidFillStyleRGB rgb) => new SwfColor(rgb.Color),

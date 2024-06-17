@@ -3,19 +3,12 @@ using SwfLib.Shapes.Records;
 
 namespace SwiffCheese.Wrappers;
 
-public class ShapeRecord
+public readonly struct ShapeRecord
 {
     private readonly OneOf<IShapeRecordRGB, IShapeRecordRGBA> _internal;
 
-    public ShapeRecord(IShapeRecordRGB record)
-    {
-        _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA>.FromT0(record);
-    }
-
-    public ShapeRecord(IShapeRecordRGBA record)
-    {
-        _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA>.FromT1(record);
-    }
+    public ShapeRecord(IShapeRecordRGB record) => _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA>.FromT0(record);
+    public ShapeRecord(IShapeRecordRGBA record) => _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA>.FromT1(record);
 
     public ShapeRecordType Type => _internal.Match(
         (IShapeRecordRGB rgb) => rgb.Type,
