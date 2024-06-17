@@ -8,7 +8,9 @@ public readonly struct SwfColor
     private readonly OneOf<SwfRGB, SwfRGBA> _internal;
 
     public SwfColor(SwfRGB rgb) => _internal = rgb;
+    public static implicit operator SwfColor(SwfRGB rgb) => new(rgb);
     public SwfColor(SwfRGBA rgba) => _internal = rgba;
+    public static implicit operator SwfColor(SwfRGBA rgba) => new(rgba);
 
     public byte Red => _internal.Match((SwfRGB rgb) => rgb.Red, (SwfRGBA rgba) => rgba.Red);
     public byte Green => _internal.Match((SwfRGB rgb) => rgb.Green, (SwfRGBA rgba) => rgba.Green);

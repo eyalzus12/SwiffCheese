@@ -9,7 +9,9 @@ public readonly struct RadialGradientFillStyle
     private readonly OneOf<RadialGradientFillStyleRGB, RadialGradientFillStyleRGBA> _internal;
 
     public RadialGradientFillStyle(RadialGradientFillStyleRGB rgb) => _internal = rgb;
+    public static implicit operator RadialGradientFillStyle(RadialGradientFillStyleRGB rgb) => new(rgb);
     public RadialGradientFillStyle(RadialGradientFillStyleRGBA rgba) => _internal = rgba;
+    public static implicit operator RadialGradientFillStyle(RadialGradientFillStyleRGBA rgba) => new(rgba);
 
     public SwfMatrix GradientMatrix => _internal.Match(
         (RadialGradientFillStyleRGB rgb) => rgb.GradientMatrix,

@@ -8,7 +8,9 @@ public readonly struct FillStyle
     private readonly OneOf<FillStyleRGB, FillStyleRGBA> _internal;
 
     public FillStyle(FillStyleRGB rgb) => _internal = rgb;
+    public static implicit operator FillStyle(FillStyleRGB rgb) => new(rgb);
     public FillStyle(FillStyleRGBA rgba) => _internal = rgba;
+    public static implicit operator FillStyle(FillStyleRGBA rgba) => new(rgba);
 
     public FillStyleType Type => _internal.Match(
         (FillStyleRGB rgb) => rgb.Type,

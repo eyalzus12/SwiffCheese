@@ -10,7 +10,9 @@ public readonly struct SwfGradient
     private readonly OneOf<GradientRGB, GradientRGBA> _internal;
 
     public SwfGradient(GradientRGB rgb) => _internal = rgb;
+    public static implicit operator SwfGradient(GradientRGB rgb) => new(rgb);
     public SwfGradient(GradientRGBA rgba) => _internal = rgba;
+    public static implicit operator SwfGradient(GradientRGBA rgba) => new(rgba);
 
     public IEnumerable<SwfGradientRecord> GradientRecords => _internal.Match(
         (GradientRGB rgb) => rgb.GradientRecords.Select(_ => new SwfGradientRecord(_)),

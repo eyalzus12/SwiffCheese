@@ -8,7 +8,9 @@ public readonly struct LineStyle
     private readonly OneOf<LineStyleRGB, LineStyleRGBA> _internal;
 
     public LineStyle(LineStyleRGB rgb) => _internal = rgb;
+    public static implicit operator LineStyle(LineStyleRGB rgb) => new(rgb);
     public LineStyle(LineStyleRGBA rgba) => _internal = rgba;
+    public static implicit operator LineStyle(LineStyleRGBA rgba) => new(rgba);
 
     public ushort Width => _internal.Match(
         (LineStyleRGB rgb) => rgb.Width,

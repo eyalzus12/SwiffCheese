@@ -1,4 +1,5 @@
 using SixLabors.ImageSharp;
+using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting;
 
@@ -10,9 +11,11 @@ public interface IShapeExporter
     void EndFills();
     void BeginLines();
     void EndLines(bool close);
-    void BeginFill(Color color);
+    void BeginFill(SwfColor color);
+    void BeginLinearGradientFill(LinearGradientFillStyle fillStyle);
+    void BeginRadialGradientFill(RadialGradientFillStyle fillStyle);
     void EndFill();
-    void LineStyle(float thickness = float.NaN, Color color = default);
+    void LineStyle(float thickness = float.NaN, SwfColor color = default);
     void MoveTo(Point pos);
     void LineTo(Point pos);
     void CurveTo(Point anchor, Point to);

@@ -10,7 +10,9 @@ public readonly struct StyleChangeRecord
     private readonly OneOf<StyleChangeShapeRecordRGB, StyleChangeShapeRecordRGBA> _internal;
 
     public StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => _internal = rgb;
+    public static implicit operator StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => new(rgb);
     public StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => _internal = rgba;
+    public static implicit operator StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => new(rgba);
 
     public uint? FillStyle0 => _internal.Match(
         (StyleChangeShapeRecordRGB rgb) => rgb.FillStyle0,

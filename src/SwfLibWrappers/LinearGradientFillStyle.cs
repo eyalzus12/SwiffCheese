@@ -9,7 +9,9 @@ public readonly struct LinearGradientFillStyle
     private readonly OneOf<LinearGradientFillStyleRGB, LinearGradientFillStyleRGBA> _internal;
 
     public LinearGradientFillStyle(LinearGradientFillStyleRGB rgb) => _internal = rgb;
+    public static implicit operator LinearGradientFillStyle(LinearGradientFillStyleRGB rgb) => new(rgb);
     public LinearGradientFillStyle(LinearGradientFillStyleRGBA rgba) => _internal = rgba;
+    public static implicit operator LinearGradientFillStyle(LinearGradientFillStyleRGBA rgba) => new(rgba);
 
     public SwfMatrix GradientMatrix => _internal.Match(
         (LinearGradientFillStyleRGB rgb) => rgb.GradientMatrix,

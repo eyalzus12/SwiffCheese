@@ -12,6 +12,7 @@ using SwiffCheese.Utils;
 using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using CoordMap = System.Collections.Generic.Dictionary<SixLabors.ImageSharp.Point, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
+using SwfLib.Data;
 
 namespace SwiffCheese.Shapes;
 
@@ -61,7 +62,7 @@ public class SwfShape(DefineShapeXTag shape)
                 pos = new Point(int.MaxValue, int.MaxValue);
 
                 if (fillStyleIdx == 0)
-                    exporter.BeginFill(Color.Black);
+                    exporter.BeginFill(new SwfRGB(0, 0, 0));
                 else
                 {
                     FillStyle fillStyle = _fillStyles[fillStyleIdx - 1];
@@ -69,10 +70,16 @@ public class SwfShape(DefineShapeXTag shape)
                     {
                         case FillStyleType.SolidColor:
                             SolidFillStyle solidFillStyle = fillStyle.AsSolidFillStyle();
-                            exporter.BeginFill(solidFillStyle.Color.SwfColorToImageSharpColor());
+                            exporter.BeginFill(solidFillStyle.Color);
                             break;
                         case FillStyleType.LinearGradient:
+                            LinearGradientFillStyle linearGradientFillStyle = fillStyle.AsLinearGradientFillStyle();
+                            exporter.BeginLinearGradientFill(linearGradientFillStyle);
+                            break;
                         case FillStyleType.RadialGradient:
+                            RadialGradientFillStyle radialGradientFillStyle = fillStyle.AsRadialGradientFillStyle();
+                            exporter.BeginRadialGradientFill(radialGradientFillStyle);
+                            break;
                         case FillStyleType.FocalGradient:
                         case FillStyleType.RepeatingBitmap:
                         case FillStyleType.ClippedBitmap:
@@ -118,11 +125,11 @@ public class SwfShape(DefineShapeXTag shape)
                 pos = new Point(int.MaxValue, int.MaxValue);
 
                 if (lineStyleIndex == 0)
-                    exporter.LineStyle(0, Color.Black);
+                    exporter.LineStyle(0, new SwfRGB(0, 0, 0));
                 else
                 {
                     LineStyle lineStyle = _lineStyles[lineStyleIndex - 1];
-                    exporter.LineStyle(lineStyle.Width, lineStyle.Color.SwfColorToImageSharpColor());
+                    exporter.LineStyle(lineStyle.Width, lineStyle.Color);
                 }
             }
 

@@ -23,8 +23,11 @@ public readonly struct DefineShapeXTag
     }
 
     public DefineShapeXTag(DefineShapeTag shape) => _internal = shape;
+    public static implicit operator DefineShapeXTag(DefineShapeTag shape) => new(shape);
     public DefineShapeXTag(DefineShape2Tag shape) => _internal = shape;
+    public static implicit operator DefineShapeXTag(DefineShape2Tag shape) => new(shape);
     public DefineShapeXTag(DefineShape3Tag shape) => _internal = shape;
+    public static implicit operator DefineShapeXTag(DefineShape3Tag shape) => new(shape);
 
     public IEnumerable<FillStyle> FillStyles => _internal.Match(
         (DefineShapeTag shape) => shape.FillStyles.Select(_ => new FillStyle(_)),
