@@ -102,7 +102,8 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
 
-        _fill = new TransformedLinearGradientBrush(new PointF(-16384, 0), new PointF(16384, 0), gradientMat, mode, [.. colorStops]);
+        Matrix3x2.Invert(gradientMat, out Matrix3x2 inverseMat);
+        _fill = new TransformedLinearGradientBrush(new PointF(-16384, 0), new PointF(16384, 0), inverseMat, mode, [.. colorStops]);
     }
 
     public void BeginRadialGradientFill(RadialGradientFillStyle fillStyle)
@@ -132,7 +133,8 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
 
-        _fill = new TransformedRadialGradientBrush(new PointF(0, 0), 16384, gradientMat, mode, [.. colorStops]);
+        Matrix3x2.Invert(gradientMat, out Matrix3x2 inverseMat);
+        _fill = new TransformedRadialGradientBrush(new PointF(0, 0), 16384, inverseMat, mode, [.. colorStops]);
     }
 
     public void EndFill()

@@ -27,14 +27,14 @@ namespace SwiffCheese.Exporting.Brushes;
 public sealed class TransformedLinearGradientBrush(
     PointF start,
     PointF end,
-    Matrix3x2 transformation,
+    Matrix3x2 inverseTransformation,
     GradientRepetitionMode repetitionMode,
     params ColorStop[] colorStops
 ) : GradientBrush(repetitionMode, colorStops)
 {
     private readonly PointF _start = start;
     private readonly PointF _end = end;
-    private readonly Matrix3x2 _transformation = transformation;
+    private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
 
     public override bool Equals(Brush? other)
     {
@@ -43,14 +43,14 @@ public sealed class TransformedLinearGradientBrush(
             return base.Equals(other)
                 && _start.Equals(brush._start)
                 && _end.Equals(brush._end)
-                && _transformation.Equals(brush._transformation);
+                && _inverseTransformation.Equals(brush._inverseTransformation);
         }
 
         return false;
     }
 
     public override int GetHashCode()
-        => HashCode.Combine(base.GetHashCode(), _start, _end, _transformation);
+        => HashCode.Combine(base.GetHashCode(), _start, _end, _inverseTransformation);
 
     public override BrushApplicator<TPixel> CreateApplicator<TPixel>(
         Configuration configuration,
@@ -63,7 +63,7 @@ public sealed class TransformedLinearGradientBrush(
             source,
             _start,
             _end,
-            _transformation,
+            _inverseTransformation,
             ColorStops,
             RepetitionMode
         );
@@ -73,7 +73,7 @@ public sealed class TransformedLinearGradientBrush(
     {
         private readonly PointF _start;
         private readonly PointF _end;
-        private readonly Matrix3x2 _transformation;
+        private readonly Matrix3x2 _inverseTransformation;
         private readonly float _alongX;
         private readonly float _alongY;
         private readonly float _acrossY;
@@ -87,14 +87,14 @@ public sealed class TransformedLinearGradientBrush(
             ImageFrame<TPixel> source,
             PointF start,
             PointF end,
-            Matrix3x2 transformation,
+            Matrix3x2 inverseTransformation,
             ColorStop[] colorStops,
             GradientRepetitionMode repetitionMode
         ) : base(configuration, options, source, colorStops, repetitionMode)
         {
             _start = start;
             _end = end;
-            _transformation = transformation;
+            _inverseTransformation = inverseTransformation;
 
             _alongX = _end.X - _start.X;
             _alongY = _end.Y - _start.Y;
@@ -108,7 +108,7 @@ public sealed class TransformedLinearGradientBrush(
 
         protected override float PositionOnGradient(float x, float y)
         {
-            Vector2 vec = Vector2.Transform(new Vector2(x, y), _transformation);
+            Vector2 vec = Vector2.Transform(new Vector2(x, y), _inverseTransformation);
             x = vec.X; y = vec.Y;
 
             if (_acrossX == 0)

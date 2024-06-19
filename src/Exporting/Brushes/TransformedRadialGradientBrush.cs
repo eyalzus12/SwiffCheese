@@ -27,14 +27,14 @@ namespace SwiffCheese.Exporting.Brushes;
 public sealed class TransformedRadialGradientBrush(
     PointF center,
     float radius,
-    Matrix3x2 transformation,
+    Matrix3x2 inverseTransformation,
     GradientRepetitionMode repetitionMode,
     params ColorStop[] colorStops
 ) : GradientBrush(repetitionMode, colorStops)
 {
     private readonly PointF _center = center;
     private readonly float _radius = radius;
-    private readonly Matrix3x2 _transformation = transformation;
+    private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
 
 
     public override bool Equals(Brush? other)
@@ -44,14 +44,14 @@ public sealed class TransformedRadialGradientBrush(
             return base.Equals(other)
                 && _center.Equals(brush._center)
                 && _radius.Equals(brush._radius)
-                && _transformation.Equals(brush._transformation);
+                && _inverseTransformation.Equals(brush._inverseTransformation);
         }
 
         return false;
     }
 
     public override int GetHashCode()
-        => HashCode.Combine(base.GetHashCode(), _center, _radius, _transformation);
+        => HashCode.Combine(base.GetHashCode(), _center, _radius, _inverseTransformation);
 
     public override BrushApplicator<TPixel> CreateApplicator<TPixel>(
         Configuration configuration,
@@ -64,7 +64,7 @@ public sealed class TransformedRadialGradientBrush(
             source,
             _center,
             _radius,
-            _transformation,
+            _inverseTransformation,
             ColorStops,
             RepetitionMode
         );
@@ -75,7 +75,7 @@ public sealed class TransformedRadialGradientBrush(
         ImageFrame<TPixel> target,
         PointF center,
         float radius,
-        Matrix3x2 transformation,
+        Matrix3x2 inverseTransformation,
         ColorStop[] colorStops,
         GradientRepetitionMode repetitionMode
     ) : GradientBrushApplicator<TPixel>(configuration, options, target, colorStops, repetitionMode)
@@ -83,12 +83,12 @@ public sealed class TransformedRadialGradientBrush(
     {
         private readonly PointF _center = center;
         private readonly float _radius = radius;
-        private readonly Matrix3x2 _transformation = transformation;
+        private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
 
         protected override float PositionOnGradient(float x, float y)
         {
-            Matrix3x2.Invert(_transformation, out Matrix3x2 inverse);
-            float distance = Vector2.Distance(_center, Vector2.Transform(new Vector2(x, y), inverse));
+            Vector2 vec = Vector2.Transform(new Vector2(x, y), _inverseTransformation);
+            float distance = Vector2.Distance(_center, vec);
             return distance / _radius;
         }
 
