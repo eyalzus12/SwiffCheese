@@ -5,7 +5,6 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SwfLib.Data;
 using SwfLib.Gradients;
 using SwiffCheese.Exporting.Brushes;
 using SwiffCheese.Utils;
@@ -22,15 +21,6 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             Antialias = false,
         },
     };
-
-    private static DrawingOptions DrawingOptionsCopy => new()
-    {
-        GraphicsOptions = _DrawingOptions.GraphicsOptions.DeepClone(),
-        ShapeOptions = _DrawingOptions.ShapeOptions.DeepClone(),
-        Transform = _DrawingOptions.Transform
-    };
-
-    private Matrix3x2 _gradientMat = Matrix3x2.Identity;
 
     private readonly PathBuilder _builder = new();
     private Brush? _fill;

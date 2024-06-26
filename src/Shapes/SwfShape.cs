@@ -7,7 +7,6 @@ using SixLabors.ImageSharp;
 using SwiffCheese.Edges;
 using SwiffCheese.Exporting;
 using SwiffCheese.Wrappers;
-using SwiffCheese.Utils;
 
 using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using CoordMap = System.Collections.Generic.Dictionary<SixLabors.ImageSharp.Point, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
