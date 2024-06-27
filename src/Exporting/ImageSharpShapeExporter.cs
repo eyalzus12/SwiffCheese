@@ -73,7 +73,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         List<ColorStop> colorStops = [];
         for (int i = 0; i < records.Length; ++i)
         {
-            var record = records[i];
+            SwfGradientRecord record = records[i];
             if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
                 continue;
             colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
@@ -104,7 +104,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         List<ColorStop> colorStops = [];
         for (int i = 0; i < records.Length; ++i)
         {
-            var record = records[i];
+            SwfGradientRecord record = records[i];
             if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
                 continue;
             colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
