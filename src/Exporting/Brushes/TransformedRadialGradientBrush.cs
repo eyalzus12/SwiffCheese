@@ -23,18 +23,20 @@ using SwiffCheese.Exporting.Brushes.Internal;
 
 namespace SwiffCheese.Exporting.Brushes;
 
-// a modified copy of ImageSharp's RadialGradientBrush
+// a modified copy of ImageSharp's RadialGradientBrush, with support for a gradient transformation and a focal point.
 public sealed class TransformedRadialGradientBrush(
     PointF center,
+    PointF focus,
     float radius,
-    Matrix3x2 inverseTransformation,
+    Matrix3x2 transform,
     GradientRepetitionMode repetitionMode,
     params ColorStop[] colorStops
 ) : GradientBrush(repetitionMode, colorStops)
 {
     private readonly PointF _center = center;
+    private readonly PointF _focus = focus;
     private readonly float _radius = radius;
-    private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
+    private readonly Matrix3x2 _inverseTransformation = Matrix3x2.Invert(transform, out Matrix3x2 inverse) ? inverse : throw new ArgumentException("Gradient transformation must be invertible");
 
 
     public override bool Equals(Brush? other)
@@ -43,6 +45,7 @@ public sealed class TransformedRadialGradientBrush(
         {
             return base.Equals(other)
                 && _center.Equals(brush._center)
+                && _focus.Equals(_focus)
                 && _radius.Equals(brush._radius)
                 && _inverseTransformation.Equals(brush._inverseTransformation);
         }
@@ -51,7 +54,7 @@ public sealed class TransformedRadialGradientBrush(
     }
 
     public override int GetHashCode()
-        => HashCode.Combine(base.GetHashCode(), _center, _radius, _inverseTransformation);
+        => HashCode.Combine(base.GetHashCode(), _center, _focus, _radius, _inverseTransformation);
 
     public override BrushApplicator<TPixel> CreateApplicator<TPixel>(
         Configuration configuration,
@@ -63,6 +66,7 @@ public sealed class TransformedRadialGradientBrush(
             options,
             source,
             _center,
+            _focus,
             _radius,
             _inverseTransformation,
             ColorStops,
@@ -74,6 +78,7 @@ public sealed class TransformedRadialGradientBrush(
         GraphicsOptions options,
         ImageFrame<TPixel> target,
         PointF center,
+        PointF focus,
         float radius,
         Matrix3x2 inverseTransformation,
         ColorStop[] colorStops,
@@ -82,14 +87,39 @@ public sealed class TransformedRadialGradientBrush(
         where TPixel : unmanaged, IPixel<TPixel>
     {
         private readonly PointF _center = center;
+        private readonly PointF _focus = focus;
         private readonly float _radius = radius;
         private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
 
+        // implemented like RadialGradientBrushSVGStyle
+        // from https://github.com/arklumpus/VectSharp/blob/master/VectSharp.Raster.ImageSharp/ImageSharpContext.cs
         protected override float PositionOnGradient(float x, float y)
         {
             Vector2 vec = Vector2.Transform(new Vector2(x, y), _inverseTransformation);
-            float distance = Vector2.Distance(_center, vec);
-            return distance / _radius;
+            float a = MathF.Pow(_radius, 2) - Vector2.DistanceSquared(_center, _focus);
+            float c = Vector2.DistanceSquared(vec, _focus);
+            float halfB = -((vec.X - _focus.X) * (_center.X - _focus.X) + (vec.Y - _focus.Y) * (_center.Y - _focus.Y));
+            float sqrt = MathF.Sqrt(halfB * halfB + a * c);
+
+            float tbr1 = (halfB - sqrt) / a;
+            float tbr2 = (halfB + sqrt) / a;
+
+            if (tbr1 >= 0 && tbr2 < 0)
+            {
+                return tbr1;
+            }
+            else if (tbr1 < 0 && tbr2 >= 0)
+            {
+                return tbr2;
+            }
+            else if (tbr1 < 0 && tbr2 < 0)
+            {
+                return 0;
+            }
+            else
+            {
+                return MathF.Min(tbr1, tbr2);
+            }
         }
 
         public override void Apply(Span<float> scanline, int x, int y)

@@ -92,8 +92,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
 
-        Matrix3x2.Invert(gradientMat, out Matrix3x2 inverseMat);
-        _fill = new TransformedLinearGradientBrush(new PointF(-16384, 0), new PointF(16384, 0), inverseMat, mode, [.. colorStops]);
+        _fill = new TransformedLinearGradientBrush(new PointF(-16384, 0), new PointF(16384, 0), gradientMat, mode, [.. colorStops]);
     }
 
     public void BeginRadialGradientFill(RadialGradientFillStyle fillStyle)
@@ -123,8 +122,37 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
 
-        Matrix3x2.Invert(gradientMat, out Matrix3x2 inverseMat);
-        _fill = new TransformedRadialGradientBrush(new PointF(0, 0), 16384, inverseMat, mode, [.. colorStops]);
+        _fill = new TransformedRadialGradientBrush(new PointF(0, 0), new PointF(0, 0), 16384, gradientMat, mode, [.. colorStops]);
+    }
+
+    public void BeginFocalGradientFill(FocalGradientFillStyle fillStyle)
+    {
+        FinalizePath();
+        SwfFocalGradient gradient = fillStyle.Gradient;
+        SwfGradientRecord[] records = [.. gradient.GradientRecords];
+        List<ColorStop> colorStops = [];
+        for (int i = 0; i < records.Length; ++i)
+        {
+            SwfGradientRecord record = records[i];
+            if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
+                continue;
+            colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
+        }
+
+        GradientRepetitionMode mode = gradient.SpreadMode switch
+        {
+            SpreadMode.Pad => GradientRepetitionMode.None,
+            SpreadMode.Reflect => GradientRepetitionMode.Reflect,
+            SpreadMode.Repeat => GradientRepetitionMode.Repeat,
+            _ => GradientRepetitionMode.None
+        };
+
+        Matrix3x2 gradientMat = fillStyle.GradientMatrix.SwfMatrixToMatrix3x2();
+        // apply draw transform
+        gradientMat *= 1 / unitDivisor;
+        gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
+
+        _fill = new TransformedRadialGradientBrush(new PointF(0, 0), new PointF((float)(16384 * gradient.FocalPoint), 0), 16384, gradientMat, mode, [.. colorStops]);
     }
 
     public void EndFill()

@@ -40,4 +40,12 @@ public readonly struct FillStyle
             (FillStyleRGBA rgba) => new RadialGradientFillStyle((RadialGradientFillStyleRGBA)rgba)
         );
     }
+
+    public FocalGradientFillStyle AsFocalGradientFillStyle()
+    {
+        return _internal.Match(
+            (FillStyleRGB rgb) => new FocalGradientFillStyle((FocalGradientFillStyleRGB)rgb),
+            (FillStyleRGBA rgba) => new FocalGradientFillStyle((FocalGradientFillStyleRGBA)rgba)
+        );
+    }
 }

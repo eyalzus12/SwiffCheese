@@ -23,18 +23,18 @@ using SwiffCheese.Exporting.Brushes.Internal;
 
 namespace SwiffCheese.Exporting.Brushes;
 
-// a modified copy of ImageSharp's LinearGradientBrush
+// a modified copy of ImageSharp's LinearGradientBrush, with support for a gradient transformation.
 public sealed class TransformedLinearGradientBrush(
     PointF start,
     PointF end,
-    Matrix3x2 inverseTransformation,
+    Matrix3x2 transform,
     GradientRepetitionMode repetitionMode,
     params ColorStop[] colorStops
 ) : GradientBrush(repetitionMode, colorStops)
 {
     private readonly PointF _start = start;
     private readonly PointF _end = end;
-    private readonly Matrix3x2 _inverseTransformation = inverseTransformation;
+    private readonly Matrix3x2 _inverseTransformation = Matrix3x2.Invert(transform, out Matrix3x2 inverse) ? inverse : throw new ArgumentException("Gradient transformation must be invertible");
 
     public override bool Equals(Brush? other)
     {
@@ -128,7 +128,7 @@ public sealed class TransformedLinearGradientBrush(
                 float x4 = x - (k * _alongY);
                 float y4 = y + (k * _alongX);
 
-                float distance = MathF.Sqrt(MathF.Pow(x4 - _start.X, 2) + MathF.Pow(y4 - _start.Y, 2));
+                float distance = Vector2.Distance(_start, new(x4, y4));
 
                 return distance / _length;
             }

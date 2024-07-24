@@ -80,6 +80,9 @@ public class SwfShape(DefineShapeXTag shape)
                             exporter.BeginRadialGradientFill(radialGradientFillStyle);
                             break;
                         case FillStyleType.FocalGradient:
+                            FocalGradientFillStyle focalGradientFillStyle = fillStyle.AsFocalGradientFillStyle();
+                            exporter.BeginFocalGradientFill(focalGradientFillStyle);
+                            break;
                         case FillStyleType.RepeatingBitmap:
                         case FillStyleType.ClippedBitmap:
                         case FillStyleType.NonSmoothedRepeatingBitmap:

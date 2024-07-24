@@ -9,7 +9,7 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct DefineShapeXTag
 {
-    private readonly OneOf<DefineShapeTag, DefineShape2Tag, DefineShape3Tag> _internal;
+    private readonly OneOf<DefineShapeTag, DefineShape2Tag, DefineShape3Tag, DefineShape4Tag> _internal;
 
     public DefineShapeXTag(ShapeBaseTag shape)
     {
@@ -18,6 +18,7 @@ public readonly struct DefineShapeXTag
             DefineShapeTag shape1 => shape1,
             DefineShape2Tag shape2 => shape2,
             DefineShape3Tag shape3 => shape3,
+            DefineShape4Tag shape4 => shape4,
             _ => throw new NotImplementedException($"Shape type {shape.GetType().Name} is not supported")
         };
     }
@@ -32,30 +33,35 @@ public readonly struct DefineShapeXTag
     public IEnumerable<FillStyle> FillStyles => _internal.Match(
         (DefineShapeTag shape) => shape.FillStyles.Select(_ => new FillStyle(_)),
         (DefineShape2Tag shape) => shape.FillStyles.Select(_ => new FillStyle(_)),
-        (DefineShape3Tag shape) => shape.FillStyles.Select(_ => new FillStyle(_))
+        (DefineShape3Tag shape) => shape.FillStyles.Select(_ => new FillStyle(_)),
+        (DefineShape4Tag shape) => shape.FillStyles.Select(_ => new FillStyle(_))
     );
 
     public IEnumerable<LineStyle> LineStyles => _internal.Match(
         (DefineShapeTag shape) => shape.LineStyles.Select(_ => new LineStyle(_)),
         (DefineShape2Tag shape) => shape.LineStyles.Select(_ => new LineStyle(_)),
-        (DefineShape3Tag shape) => shape.LineStyles.Select(_ => new LineStyle(_))
+        (DefineShape3Tag shape) => shape.LineStyles.Select(_ => new LineStyle(_)),
+        (DefineShape4Tag shape) => shape.LineStyles.Select(_ => new LineStyle(_))
     );
 
     public IEnumerable<ShapeRecord> ShapeRecords => _internal.Match(
         (DefineShapeTag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
         (DefineShape2Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
-        (DefineShape3Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_))
+        (DefineShape3Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
+        (DefineShape4Tag shape) => shape.ShapeRecords.Select(_ => new ShapeRecord(_))
     );
 
     public ushort ShapeID => _internal.Match(
         (DefineShapeTag shape) => shape.ShapeID,
         (DefineShape2Tag shape) => shape.ShapeID,
-        (DefineShape3Tag shape) => shape.ShapeID
+        (DefineShape3Tag shape) => shape.ShapeID,
+        (DefineShape4Tag shape) => shape.ShapeID
     );
 
     public SwfRect ShapeBounds => _internal.Match(
         (DefineShapeTag shape) => shape.ShapeBounds,
         (DefineShape2Tag shape) => shape.ShapeBounds,
-        (DefineShape3Tag shape) => shape.ShapeBounds
+        (DefineShape3Tag shape) => shape.ShapeBounds,
+        (DefineShape4Tag shape) => shape.ShapeBounds
     );
 }
