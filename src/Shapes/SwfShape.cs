@@ -68,19 +68,19 @@ public class SwfShape(DefineShapeXTag shape)
                     switch (fillStyle.Type)
                     {
                         case FillStyleType.SolidColor:
-                            SolidFillStyle solidFillStyle = fillStyle.AsSolidFillStyle();
+                            SolidFillStyle solidFillStyle = fillStyle.ToSolidFillStyle();
                             exporter.BeginFill(solidFillStyle.Color);
                             break;
                         case FillStyleType.LinearGradient:
-                            LinearGradientFillStyle linearGradientFillStyle = fillStyle.AsLinearGradientFillStyle();
+                            LinearGradientFillStyle linearGradientFillStyle = fillStyle.ToLinearGradientFillStyle();
                             exporter.BeginLinearGradientFill(linearGradientFillStyle);
                             break;
                         case FillStyleType.RadialGradient:
-                            RadialGradientFillStyle radialGradientFillStyle = fillStyle.AsRadialGradientFillStyle();
+                            RadialGradientFillStyle radialGradientFillStyle = fillStyle.ToRadialGradientFillStyle();
                             exporter.BeginRadialGradientFill(radialGradientFillStyle);
                             break;
                         case FillStyleType.FocalGradient:
-                            FocalGradientFillStyle focalGradientFillStyle = fillStyle.AsFocalGradientFillStyle();
+                            FocalGradientFillStyle focalGradientFillStyle = fillStyle.ToFocalGradientFillStyle();
                             exporter.BeginFocalGradientFill(focalGradientFillStyle);
                             break;
                         case FillStyleType.RepeatingBitmap:
@@ -176,7 +176,7 @@ public class SwfShape(DefineShapeXTag shape)
             switch (shapeRecord.Type)
             {
                 case ShapeRecordType.StyleChangeRecord:
-                    StyleChangeRecord styleChangeRecord = shapeRecord.AsStyleChangeRecord();
+                    StyleChangeRecord styleChangeRecord = shapeRecord.ToStyleChangeRecord();
                     if (styleChangeRecord.LineStyle is not null ||
                         styleChangeRecord.FillStyle0 is not null ||
                         styleChangeRecord.FillStyle1 is not null)
@@ -234,7 +234,7 @@ public class SwfShape(DefineShapeXTag shape)
                     }
                     break;
                 case ShapeRecordType.StraightEdge:
-                    StraightEdgeShapeRecord straightEdgeRecord = shapeRecord.AsStraightEdgeRecord();
+                    StraightEdgeShapeRecord straightEdgeRecord = shapeRecord.ToStraightEdgeRecord();
                     from = new Point(position.X, position.Y);
                     Size delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
                     position += delta;
@@ -242,7 +242,7 @@ public class SwfShape(DefineShapeXTag shape)
                     subPath.Add(new StraightEdge { From = from, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
                     break;
                 case ShapeRecordType.CurvedEdgeRecord:
-                    CurvedEdgeShapeRecord curvedEdgeRecord = shapeRecord.AsCurvedEdgeRecord();
+                    CurvedEdgeShapeRecord curvedEdgeRecord = shapeRecord.ToCurvedEdgeRecord();
                     from = new Point(position.X, position.Y);
                     Size controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
                     control = position + controlDelta;

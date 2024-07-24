@@ -17,7 +17,7 @@ public readonly struct FillStyle
         (FillStyleRGBA rgba) => rgba.Type
     );
 
-    public SolidFillStyle AsSolidFillStyle()
+    public SolidFillStyle ToSolidFillStyle()
     {
         return _internal.Match(
             (FillStyleRGB rgb) => new SolidFillStyle((SolidFillStyleRGB)rgb),
@@ -25,7 +25,7 @@ public readonly struct FillStyle
         );
     }
 
-    public LinearGradientFillStyle AsLinearGradientFillStyle()
+    public LinearGradientFillStyle ToLinearGradientFillStyle()
     {
         return _internal.Match(
             (FillStyleRGB rgb) => new LinearGradientFillStyle((LinearGradientFillStyleRGB)rgb),
@@ -33,7 +33,7 @@ public readonly struct FillStyle
         );
     }
 
-    public RadialGradientFillStyle AsRadialGradientFillStyle()
+    public RadialGradientFillStyle ToRadialGradientFillStyle()
     {
         return _internal.Match(
             (FillStyleRGB rgb) => new RadialGradientFillStyle((RadialGradientFillStyleRGB)rgb),
@@ -41,7 +41,7 @@ public readonly struct FillStyle
         );
     }
 
-    public FocalGradientFillStyle AsFocalGradientFillStyle()
+    public FocalGradientFillStyle ToFocalGradientFillStyle()
     {
         return _internal.Match(
             (FillStyleRGB rgb) => new FocalGradientFillStyle((FocalGradientFillStyleRGB)rgb),

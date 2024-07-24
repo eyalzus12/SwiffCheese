@@ -17,25 +17,25 @@ public readonly struct ShapeRecord
         (IShapeRecordEx rgba) => rgba.Type
     );
 
-    public StyleChangeRecord AsStyleChangeRecord() => _internal.Match(
+    public StyleChangeRecord ToStyleChangeRecord() => _internal.Match(
         (IShapeRecordRGB rgb) => new StyleChangeRecord((StyleChangeShapeRecordRGB)rgb),
         (IShapeRecordRGBA rgba) => new StyleChangeRecord((StyleChangeShapeRecordRGBA)rgba),
         (IShapeRecordEx ex) => new StyleChangeRecord((StyleChangeShapeRecordEx)ex)
     );
 
-    public StraightEdgeShapeRecord AsStraightEdgeRecord() => _internal.Match(
+    public StraightEdgeShapeRecord ToStraightEdgeRecord() => _internal.Match(
         (IShapeRecordRGB rgb) => (StraightEdgeShapeRecord)rgb,
         (IShapeRecordRGBA rgba) => (StraightEdgeShapeRecord)rgba,
         (IShapeRecordEx ex) => (StraightEdgeShapeRecord)ex
     );
 
-    public CurvedEdgeShapeRecord AsCurvedEdgeRecord() => _internal.Match(
+    public CurvedEdgeShapeRecord ToCurvedEdgeRecord() => _internal.Match(
         (IShapeRecordRGB rgb) => (CurvedEdgeShapeRecord)rgb,
         (IShapeRecordRGBA rgba) => (CurvedEdgeShapeRecord)rgba,
         (IShapeRecordEx ex) => (CurvedEdgeShapeRecord)ex
     );
 
-    public EndShapeRecord AsEndShapeRecord() => _internal.Match(
+    public EndShapeRecord ToEndShapeRecord() => _internal.Match(
         (IShapeRecordRGB rgb) => (EndShapeRecord)rgb,
         (IShapeRecordRGBA rgba) => (EndShapeRecord)rgba,
         (IShapeRecordEx ex) => (EndShapeRecord)ex
