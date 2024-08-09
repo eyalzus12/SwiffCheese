@@ -1,3 +1,3 @@
-A C# library based on ImageSharp and SwfLib for exporting swf shapes. Uses OneOf to generalize the SwfLib API.
+A C# library for exporting swf shapes using ImageSharp and SwfLib.
 
-WIP. Does not support DefineShape4 or fill styles besides solid.
+Does not support most DefineShape4-only features, besides focal radient fill.
