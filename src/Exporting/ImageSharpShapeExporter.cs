@@ -14,6 +14,9 @@ namespace SwiffCheese.Exporting;
 
 public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = default, float unitDivisor = 1) : IShapeExporter
 {
+    public static Color SwfColorToImageSharpColor(SwfColor color) =>
+        Color.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
+
     private static readonly DrawingOptions _DrawingOptions = new()
     {
         GraphicsOptions = new GraphicsOptions()
@@ -62,7 +65,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
     public void BeginFill(SwfColor color)
     {
         FinalizePath();
-        _fill = new SolidBrush(color.SwfColorToImageSharpColor());
+        _fill = new SolidBrush(SwfColorToImageSharpColor(color));
     }
 
     public void BeginLinearGradientFill(LinearGradientFillStyle fillStyle)
@@ -76,7 +79,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             SwfGradientRecord record = records[i];
             if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
                 continue;
-            colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
+            colorStops.Add(new ColorStop(record.Ratio / 255.0f, SwfColorToImageSharpColor(record.Color)));
         }
 
         GradientRepetitionMode mode = gradient.SpreadMode switch
@@ -87,7 +90,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = fillStyle.GradientMatrix.SwfMatrixToMatrix3x2();
+        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -106,7 +109,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             SwfGradientRecord record = records[i];
             if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
                 continue;
-            colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
+            colorStops.Add(new ColorStop(record.Ratio / 255.0f, SwfColorToImageSharpColor(record.Color)));
         }
 
         GradientRepetitionMode mode = gradient.SpreadMode switch
@@ -117,7 +120,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = fillStyle.GradientMatrix.SwfMatrixToMatrix3x2();
+        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -136,7 +139,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             SwfGradientRecord record = records[i];
             if ((i > 0) && (record.Ratio == records[i - 1].Ratio))
                 continue;
-            colorStops.Add(new ColorStop(record.Ratio / 255.0f, record.Color.SwfColorToImageSharpColor()));
+            colorStops.Add(new ColorStop(record.Ratio / 255.0f, SwfColorToImageSharpColor(record.Color)));
         }
 
         GradientRepetitionMode mode = gradient.SpreadMode switch
@@ -147,7 +150,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = fillStyle.GradientMatrix.SwfMatrixToMatrix3x2();
+        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -163,7 +166,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
     public void LineStyle(float thickness = float.NaN, SwfColor color = default)
     {
         FinalizePath();
-        _line = new SolidPen(color.SwfColorToImageSharpColor(), float.IsNaN(thickness) ? 1 : thickness);
+        _line = new SolidPen(SwfColorToImageSharpColor(color), float.IsNaN(thickness) ? 1 : thickness);
     }
 
     public void MoveTo(Point pos)
