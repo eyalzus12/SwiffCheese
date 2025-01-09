@@ -1,4 +1,4 @@
-using SixLabors.ImageSharp;
+using System.Numerics;
 using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting;
@@ -17,8 +17,8 @@ public interface IShapeExporter
     void BeginFocalGradientFill(FocalGradientFillStyle fillStyle);
     void EndFill();
     void LineStyle(float thickness = float.NaN, SwfColor color = default);
-    void MoveTo(Point pos);
-    void LineTo(Point pos);
-    void CurveTo(Point anchor, Point to);
+    void MoveTo(Vector2 pos);
+    void LineTo(Vector2 pos);
+    void CurveTo(Vector2 anchor, Vector2 to);
     void FinalizePath();
 }

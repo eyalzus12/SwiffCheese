@@ -20,7 +20,7 @@ using System.Threading;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace SwiffCheese.Exporting.Brushes.Internal;
+namespace SwiffCheese.Exporting.ImageSharp.Brushes.Internal;
 
 // a modified copy of an internal ImageSharp class
 public class ThreadLocalBlenderBuffers<TPixel>(MemoryAllocator allocator, int scanlineWidth, bool amountBufferOnly = false) : IDisposable

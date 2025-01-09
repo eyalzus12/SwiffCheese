@@ -1,10 +1,10 @@
-using SixLabors.ImageSharp;
+using System.Numerics;
 
 namespace SwiffCheese.Edges;
 
 public class CurvedEdge : StraightEdge, IEdge
 {
-    public Point Control { get; init; }
+    public Vector2 Control { get; init; }
     public override IEdge ReverseWithStyle(int newFillStyleIndex) => new CurvedEdge()
     {
         From = To,

@@ -21,7 +21,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace SwiffCheese.Exporting.Brushes.Internal;
+namespace SwiffCheese.Exporting.ImageSharp.Brushes.Internal;
 
 // a modified copy of an internal ImageSharp class
 public abstract class GradientBrushApplicator<TPixel> : BrushApplicator<TPixel>

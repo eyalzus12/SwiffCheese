@@ -6,11 +6,11 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SwfLib.Gradients;
-using SwiffCheese.Exporting.Brushes;
+using SwiffCheese.Exporting.ImageSharp.Brushes;
 using SwiffCheese.Utils;
 using SwiffCheese.Wrappers;
 
-namespace SwiffCheese.Exporting;
+namespace SwiffCheese.Exporting.ImageSharp;
 
 public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = default, float unitDivisor = 1) : IShapeExporter
 {
@@ -29,7 +29,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
     private Brush? _fill;
     private Pen? _line;
 
-    private Vector2 GetRealLocation(Point point) => (Vector2)point / unitDivisor + offset;
+    private Vector2 GetRealLocation(Vector2 point) => point / unitDivisor + offset;
 
     public void BeginShape()
     {
@@ -169,17 +169,17 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         _line = new SolidPen(SwfColorToImageSharpColor(color), float.IsNaN(thickness) ? 1 : thickness);
     }
 
-    public void MoveTo(Point pos)
+    public void MoveTo(Vector2 pos)
     {
         _builder.MoveTo(GetRealLocation(pos));
     }
 
-    public void LineTo(Point pos)
+    public void LineTo(Vector2 pos)
     {
         _builder.LineTo(GetRealLocation(pos));
     }
 
-    public void CurveTo(Point anchor, Point to)
+    public void CurveTo(Vector2 anchor, Vector2 to)
     {
         _builder.QuadraticBezierTo(GetRealLocation(anchor), GetRealLocation(to));
     }

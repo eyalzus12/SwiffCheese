@@ -9,9 +9,10 @@ using SwiffCheese.Exporting;
 using SwiffCheese.Wrappers;
 
 using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
-using CoordMap = System.Collections.Generic.Dictionary<SixLabors.ImageSharp.Point, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
+using CoordMap = System.Collections.Generic.Dictionary<System.Numerics.Vector2, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
 using SwfLib.Data;
+using System.Numerics;
 
 namespace SwiffCheese.Shapes;
 
@@ -47,7 +48,7 @@ public class SwfShape(DefineShapeXTag shape)
         Path path = PathFromEdgeMap(_fillEdgesMaps[groupIndex]);
         if (path.Count == 0)
             return;
-        Point pos = new(int.MaxValue, int.MaxValue);
+        Vector2 pos = new(int.MaxValue, int.MaxValue);
         int fillStyleIdx = int.MaxValue;
         exporter.BeginFills();
         foreach (IEdge edge in path)
@@ -114,8 +115,8 @@ public class SwfShape(DefineShapeXTag shape)
         Path path = PathFromEdgeMap(_lineEdgeMaps[groupIndex]);
         if (path.Count == 0)
             return;
-        Point pos = new(int.MaxValue, int.MaxValue);
-        Point lastMove = pos;
+        Vector2 pos = new(int.MaxValue, int.MaxValue);
+        Vector2 lastMove = pos;
         int lineStyleIndex = int.MaxValue;
 
         exporter.BeginLines();
@@ -124,7 +125,7 @@ public class SwfShape(DefineShapeXTag shape)
             if (lineStyleIndex != edge.LineStyleIndex)
             {
                 lineStyleIndex = edge.LineStyleIndex;
-                pos = new Point(int.MaxValue, int.MaxValue);
+                pos = new(int.MaxValue, int.MaxValue);
 
                 if (lineStyleIndex == 0)
                     exporter.LineStyle(0, new SwfRGB(0, 0, 0));
@@ -352,7 +353,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private IEdge? FindNextEdgeInCoordMap(IEdge edge)
     {
-        Point key = edge.To;
+        Vector2 key = edge.To;
         if (!_coordMap.TryGetValue(key, out Path? path))
             return null;
         if (path.Count == 0)
@@ -362,7 +363,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private IEdge? FindNextEdgeInReverseCoordMap(IEdge edge)
     {
-        Point key = edge.To;
+        Vector2 key = edge.To;
         if (!_reverseCoordMap.TryGetValue(key, out Path? path))
             return null;
         if (path.Count == 0)
@@ -372,7 +373,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void RemoveEdgeFromCoordMap(IEdge edge)
     {
-        Point key = edge.From;
+        Vector2 key = edge.From;
         if (_coordMap.TryGetValue(key, out Path? value))
         {
             if (value.Count == 1) _coordMap.Remove(key);
@@ -382,7 +383,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void RemoveEdgeFromReverseCoordMap(IEdge edge)
     {
-        Point key = edge.To;
+        Vector2 key = edge.To;
         if (_reverseCoordMap.TryGetValue(key, out Path? value))
         {
             if (value.Count == 1) _reverseCoordMap.Remove(key);
@@ -395,7 +396,7 @@ public class SwfShape(DefineShapeXTag shape)
         _coordMap.Clear();
         for (int i = 0; i < path.Count; ++i)
         {
-            Point key = path[i].From;
+            Vector2 key = path[i].From;
             if (!_coordMap.ContainsKey(key)) _coordMap[key] = [];
             _coordMap[key].Add(path[i]);
         }
@@ -406,7 +407,7 @@ public class SwfShape(DefineShapeXTag shape)
         _reverseCoordMap.Clear();
         for (int i = 0; i < path.Count; ++i)
         {
-            Point key = path[i].To;
+            Vector2 key = path[i].To;
             if (!_reverseCoordMap.ContainsKey(key)) _reverseCoordMap[key] = [];
             _reverseCoordMap[key].Add(path[i]);
         }
@@ -414,18 +415,18 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void UpdateEdgeInCoordMap(IEdge edge, IEdge newEdge)
     {
-        Point key1 = edge.From;
+        Vector2 key1 = edge.From;
         _coordMap[key1].Remove(edge);
-        Point key2 = newEdge.From;
+        Vector2 key2 = newEdge.From;
         if (!_coordMap.ContainsKey(key2)) _coordMap[key2] = [];
         _coordMap[key2].Add(newEdge);
     }
 
     private void UpdateEdgeInReverseCoordMap(IEdge edge, IEdge newEdge)
     {
-        Point key1 = edge.To;
+        Vector2 key1 = edge.To;
         _reverseCoordMap[key1].Remove(edge);
-        Point key2 = newEdge.To;
+        Vector2 key2 = newEdge.To;
         if (!_reverseCoordMap.ContainsKey(key2)) _reverseCoordMap[key2] = [];
         _reverseCoordMap[key2].Add(newEdge);
     }

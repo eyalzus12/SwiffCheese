@@ -19,9 +19,9 @@ using System.Numerics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
-using SwiffCheese.Exporting.Brushes.Internal;
+using SwiffCheese.Exporting.ImageSharp.Brushes.Internal;
 
-namespace SwiffCheese.Exporting.Brushes;
+namespace SwiffCheese.Exporting.ImageSharp.Brushes;
 
 // a modified copy of ImageSharp's RadialGradientBrush, with support for a gradient transformation and a focal point.
 public sealed class TransformedRadialGradientBrush(
