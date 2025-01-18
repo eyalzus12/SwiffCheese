@@ -37,7 +37,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
 
     public void BeginShape()
     {
-        double scale = 1.0 / unitDivisor;
+        double scale = 1.0;
         double offsetX = position.X / unitDivisor;
         double offsetY = position.Y / unitDivisor;
         string transform = SvgUtils.SvgMatrixString(scale, 0, 0, scale, -offsetX, -offsetY);
@@ -92,7 +92,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
         _path.SetAttributeValue("fill", SvgUtils.ColorToHexString(color));
         _path.SetAttributeValue("fill-rule", "evenodd");
         if (color.Alpha != 255)
-            _path.SetAttributeValue("fill-opacity", (color.Alpha / 255.0f).ToString());
+            _path.SetAttributeValue("fill-opacity", color.Alpha / 255.0f);
     }
 
     public void BeginLinearGradientFill(LinearGradientFillStyle fillStyle)
@@ -130,17 +130,20 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
     public void LineStyle(float thickness = float.NaN, SwfColor color = default)
     {
         FinalizePath();
+        double strokeWidth = thickness / unitDivisor;
         _path.SetAttributeValue("fill", "none");
         _path.SetAttributeValue("stroke", SvgUtils.ColorToHexString(color));
-        _path.SetAttributeValue("stroke-width", thickness);
+        _path.SetAttributeValue("stroke-width", strokeWidth);
         if (color.Alpha != 255)
-            _path.SetAttributeValue("stop-opacity", (color.Alpha / 255.0).ToString());
+            _path.SetAttributeValue("stop-opacity", color.Alpha / 255.0);
     }
 
     public void MoveTo(Vector2 pos)
     {
         _currentDrawCommand = "";
-        _pathData.Append($"M{pos.X} {pos.Y} ");
+        double x = pos.X / unitDivisor;
+        double y = pos.Y / unitDivisor;
+        _pathData.Append($"M{x} {y} ");
     }
 
     public void LineTo(Vector2 pos)
@@ -150,7 +153,9 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
             _currentDrawCommand = "L";
             _pathData.Append('L');
         }
-        _pathData.Append($"{pos.X} {pos.Y} ");
+        double x = pos.X / unitDivisor;
+        double y = pos.Y / unitDivisor;
+        _pathData.Append($"{x} {y} ");
     }
 
     public void CurveTo(Vector2 anchor, Vector2 to)
@@ -160,7 +165,11 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
             _currentDrawCommand = "Q";
             _pathData.Append('Q');
         }
-        _pathData.Append($"{anchor.X} {anchor.Y} {to.X} {to.Y} ");
+        double ax = anchor.X / unitDivisor;
+        double ay = anchor.Y / unitDivisor;
+        double x = to.X / unitDivisor;
+        double y = to.Y / unitDivisor;
+        _pathData.Append($"{ax} {ay} {x} {y} ");
     }
 
     public void FinalizePath()
@@ -178,12 +187,12 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
 
     private void PopulateGradientElement(XElement gradient, IEnumerable<SwfGradientRecord> records, SwfMatrix matrix, SpreadMode spreadMode, InterpolationMode interpolationMode, double? focalPointRatio = null)
     {
-        double scaleX = SvgUtils.RoundPixels400(matrix.ScaleX * unitDivisor);
-        double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0 * unitDivisor);
-        double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1 * unitDivisor);
-        double scaleY = SvgUtils.RoundPixels400(matrix.ScaleY * unitDivisor);
-        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX);
-        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY);
+        double scaleX = SvgUtils.RoundPixels400(matrix.ScaleX);
+        double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0);
+        double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1);
+        double scaleY = SvgUtils.RoundPixels400(matrix.ScaleY);
+        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX / unitDivisor);
+        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY / unitDivisor);
         string transform = SvgUtils.SvgMatrixString(scaleX, rotateSkew0, rotateSkew1, scaleY, translateX, translateY);
         gradient.SetAttributeValue("gradientTransform", transform);
 
@@ -224,7 +233,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
             entry.SetAttributeValue("offset", record.Ratio / 255.0);
             entry.SetAttributeValue("stop-color", SvgUtils.ColorToHexString(record.Color));
             if (record.Color.Alpha != 255)
-                entry.SetAttributeValue("stop-opacity", (record.Color.Alpha / 255.0).ToString());
+                entry.SetAttributeValue("stop-opacity", record.Color.Alpha / 255.0);
             gradient.Add(entry);
         }
     }
