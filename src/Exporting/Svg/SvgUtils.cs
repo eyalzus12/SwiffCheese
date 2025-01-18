@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using SwfLib.Data;
 using SwiffCheese.Wrappers;
 
@@ -7,7 +6,7 @@ namespace SwiffCheese.Exporting.Svg;
 
 internal static class SvgUtils
 {
-    internal static string MatrixToSvgString(SwfMatrix matrix, float unitDivisor)
+    internal static string MatrixToSvgString(SwfMatrix matrix, double unitDivisor)
     {
         double translateX = RoundPixels400(matrix.TranslateX / unitDivisor);
         double translateY = RoundPixels400(matrix.TranslateY / unitDivisor);
@@ -15,14 +14,12 @@ internal static class SvgUtils
         double rotateSkew1 = RoundPixels400(matrix.RotateSkew1);
         double scaleX = RoundPixels400(matrix.ScaleX);
         double scaleY = RoundPixels400(matrix.ScaleY);
-        return $"matrix({scaleX}, {rotateSkew0}, {rotateSkew1}, {scaleY}, {translateX}, {translateY})";
+        return SvgMatrixString(scaleX, rotateSkew0, rotateSkew1, scaleY, translateX, translateY);
     }
 
-    internal static string TransMatrixToSvgString(Vector2 translate, float unitDivisor)
+    internal static string SvgMatrixString(double scaleX, double rotateSkew0, double rotateSkew1, double scaleY, double translateX, double translateY)
     {
-        double translateX = RoundPixels400(translate.X / unitDivisor);
-        double translateY = RoundPixels400(translate.Y / unitDivisor);
-        return $"matrix(1, 0, 0, 1, {translateX}, {translateY})";
+        return $"matrix({scaleX}, {rotateSkew0}, {rotateSkew1}, {scaleY}, {translateX}, {translateY})";
     }
 
     internal static double RoundPixels20(double pixels)
@@ -34,7 +31,6 @@ internal static class SvgUtils
     {
         return Math.Round(pixels, 4);
     }
-
 
     internal static string ColorToHexString(SwfColor color)
     {

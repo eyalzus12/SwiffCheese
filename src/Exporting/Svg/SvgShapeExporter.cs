@@ -8,8 +8,10 @@ using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
 
-public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor = 20) : IShapeExporter
+public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor = 20) : IShapeExporter
 {
+    private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
+
     public XDocument Document { get; private set; } = null!;
 
     private string _currentDrawCommand = "";
@@ -26,7 +28,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
         {
             if (_defs is null)
             {
-                _defs = new("defs");
+                _defs = new(xmlns + "defs");
                 _svg.Add(_defs);
             }
             return _defs;
@@ -35,21 +37,18 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
 
     public void BeginShape()
     {
-        _svg = new("svg", _group);
+        double scale = 1.0 / unitDivisor;
+        string transform = SvgUtils.SvgMatrixString(scale, 0, 0, scale, offset.X, offset.Y);
+        _group = new XElement(xmlns + "g");
+        _group.SetAttributeValue("transform", transform);
+
+        _svg = new(xmlns + "svg", _group);
+        _svg.SetAttributeValue("width", size.X);
+        _svg.SetAttributeValue("height", size.Y);
+
         Document = new(new XDeclaration("1.0", "UTF-8", "no"), _svg);
 
-        _svg.SetAttributeValue("xmlns:xlink", "http://www.w3.org/1999/xlink");
-        _svg.SetElementValue("xmlns", "http://www.w3.org/2000/svg");
-
-        _svg.SetAttributeValue("Width", $"{size.X / unitDivisor}px");
-        _svg.SetAttributeValue("Height", $"{size.Y / unitDivisor}px");
-
-        _group = new XElement("g");
-        _group.SetAttributeValue("transform", SvgUtils.TransMatrixToSvgString(position, unitDivisor));
-
-        _svg.Add(_group);
-
-        _path = new("path");
+        _path = new(xmlns + "path");
         _pathData.Clear();
         _gradientCount = 0;
     }
@@ -94,7 +93,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
     public void BeginLinearGradientFill(LinearGradientFillStyle fillStyle)
     {
         FinalizePath();
-        XElement gradientElement = new("linearGradient");
+        XElement gradientElement = new(xmlns + "linearGradient");
         SwfGradient gradient = fillStyle.Gradient;
         PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode);
         AddGradientElement(gradientElement);
@@ -103,7 +102,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
     public void BeginRadialGradientFill(RadialGradientFillStyle fillStyle)
     {
         FinalizePath();
-        XElement gradientElement = new("radialGradient");
+        XElement gradientElement = new(xmlns + "radialGradient");
         SwfGradient gradient = fillStyle.Gradient;
         PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, 0);
         AddGradientElement(gradientElement);
@@ -112,7 +111,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
     public void BeginFocalGradientFill(FocalGradientFillStyle fillStyle)
     {
         FinalizePath();
-        XElement gradientElement = new("radialGradient");
+        XElement gradientElement = new(xmlns + "radialGradient");
         SwfFocalGradient gradient = fillStyle.Gradient;
         PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, gradient.FocalPoint);
         AddGradientElement(gradientElement);
@@ -126,13 +125,17 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
     public void LineStyle(float thickness = float.NaN, SwfColor color = default)
     {
         FinalizePath();
+        _path.SetAttributeValue("fill", "none");
+        _path.SetAttributeValue("stroke", SvgUtils.ColorToHexString(color));
+        _path.SetAttributeValue("stroke-width", thickness);
+        if (color.Alpha != 255)
+            _path.SetAttributeValue("stop-opacity", (color.Alpha / 255.0).ToString());
     }
 
     public void MoveTo(Vector2 pos)
     {
         _currentDrawCommand = "";
-        pos /= unitDivisor;
-        _pathData.Append($"M{SvgUtils.RoundPixels20(pos.X)} {SvgUtils.RoundPixels20(pos.Y)} ");
+        _pathData.Append($"M{pos.X} {pos.Y} ");
     }
 
     public void LineTo(Vector2 pos)
@@ -142,8 +145,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
             _currentDrawCommand = "L";
             _pathData.Append('L');
         }
-        pos /= unitDivisor;
-        _pathData.Append($"{SvgUtils.RoundPixels20(pos.X)} {SvgUtils.RoundPixels20(pos.Y)} ");
+        _pathData.Append($"{pos.X} {pos.Y} ");
     }
 
     public void CurveTo(Vector2 anchor, Vector2 to)
@@ -153,16 +155,18 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
             _currentDrawCommand = "Q";
             _pathData.Append('Q');
         }
-        anchor /= unitDivisor;
-        to /= unitDivisor;
-        _pathData.Append($"{SvgUtils.RoundPixels20(anchor.X)} {SvgUtils.RoundPixels20(anchor.Y)} ${SvgUtils.RoundPixels20(to.X)} ${SvgUtils.RoundPixels20(to.Y)} ");
+        _pathData.Append($"{anchor.X} {anchor.Y} {to.X} {to.Y} ");
     }
 
     public void FinalizePath()
     {
-        _path.SetAttributeValue("d", _pathData.ToString().Trim());
-        _group.Add(_path);
-        _path = new XElement("path");
+        string pathData = _pathData.ToString().Trim();
+        if (pathData.Length > 0)
+        {
+            _path.SetAttributeValue("d", pathData);
+            _group.Add(_path);
+        }
+        _path = new XElement(xmlns + "path");
         _pathData.Clear();
         _currentDrawCommand = "";
     }
@@ -200,15 +204,15 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, float unitDivisor 
         if (interpolationMode == InterpolationMode.Linear)
             gradient.SetAttributeValue("color-interpolation", "linearRGB");
 
-        gradient.SetAttributeValue("gradientTransform", SvgUtils.MatrixToSvgString(matrix, unitDivisor));
+        gradient.SetAttributeValue("gradientTransform", SvgUtils.MatrixToSvgString(matrix, 1));
 
         foreach (SwfGradientRecord record in records)
         {
-            XElement entry = new("stop");
+            XElement entry = new(xmlns + "stop");
             entry.SetAttributeValue("offset", record.Ratio / 255.0);
             entry.SetAttributeValue("stop-color", SvgUtils.ColorToHexString(record.Color));
             if (record.Color.Alpha != 255)
-                entry.SetAttributeValue("stop-opacity", (record.Color.Alpha / 255.0f).ToString());
+                entry.SetAttributeValue("stop-opacity", (record.Color.Alpha / 255.0).ToString());
             gradient.Add(entry);
         }
     }
