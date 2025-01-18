@@ -8,7 +8,7 @@ using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
 
-public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor = 20) : IShapeExporter
+public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor = 20) : IShapeExporter
 {
     private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
 
@@ -38,13 +38,18 @@ public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor =
     public void BeginShape()
     {
         double scale = 1.0 / unitDivisor;
-        string transform = SvgUtils.SvgMatrixString(scale, 0, 0, scale, offset.X, offset.Y);
+        double offsetX = position.X / unitDivisor;
+        double offsetY = position.Y / unitDivisor;
+        string transform = SvgUtils.SvgMatrixString(scale, 0, 0, scale, -offsetX, -offsetY);
+
         _group = new XElement(xmlns + "g");
         _group.SetAttributeValue("transform", transform);
 
+        double width = size.X / unitDivisor;
+        double height = size.Y / unitDivisor;
         _svg = new(xmlns + "svg", _group);
-        _svg.SetAttributeValue("width", size.X);
-        _svg.SetAttributeValue("height", size.Y);
+        _svg.SetAttributeValue("width", width);
+        _svg.SetAttributeValue("height", height);
 
         Document = new(new XDeclaration("1.0", "UTF-8", "no"), _svg);
 
@@ -173,6 +178,15 @@ public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor =
 
     private void PopulateGradientElement(XElement gradient, IEnumerable<SwfGradientRecord> records, SwfMatrix matrix, SpreadMode spreadMode, InterpolationMode interpolationMode, double? focalPointRatio = null)
     {
+        double scaleX = SvgUtils.RoundPixels400(matrix.ScaleX * unitDivisor);
+        double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0 * unitDivisor);
+        double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1 * unitDivisor);
+        double scaleY = SvgUtils.RoundPixels400(matrix.ScaleY * unitDivisor);
+        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX);
+        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY);
+        string transform = SvgUtils.SvgMatrixString(scaleX, rotateSkew0, rotateSkew1, scaleY, translateX, translateY);
+        gradient.SetAttributeValue("gradientTransform", transform);
+
         gradient.SetAttributeValue("gradientUnits", "userSpaceOnUse");
         // linear
         if (focalPointRatio is null)
@@ -188,7 +202,7 @@ public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor =
             gradient.SetAttributeValue("cy", "0");
             if (focalPointRatio != 0)
             {
-                gradient.SetAttributeValue("fx", (819.2 * focalPointRatio).ToString());
+                gradient.SetAttributeValue("fx", 819.2 * focalPointRatio);
                 gradient.SetAttributeValue("fy", "0");
             }
         }
@@ -203,8 +217,6 @@ public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor =
 
         if (interpolationMode == InterpolationMode.Linear)
             gradient.SetAttributeValue("color-interpolation", "linearRGB");
-
-        gradient.SetAttributeValue("gradientTransform", SvgUtils.MatrixToSvgString(matrix, 1));
 
         foreach (SwfGradientRecord record in records)
         {
@@ -222,7 +234,7 @@ public class SvgShapeExporter(Vector2 offset, Vector2 size, double unitDivisor =
         string gradientId = $"gradient{_gradientCount++}";
         gradientElement.SetAttributeValue("id", gradientId);
         _path.SetAttributeValue("stroke", "none");
-        _path.SetAttributeValue("fill", $"#url({gradientId})");
+        _path.SetAttributeValue("fill", $"url(#{gradientId})");
         _path.SetAttributeValue("fill-rule", "evenodd");
         Defs.Add(gradientElement);
     }
