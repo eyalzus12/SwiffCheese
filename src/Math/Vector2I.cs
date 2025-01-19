@@ -44,6 +44,13 @@ public struct Vector2I : IEquatable<Vector2I>
         return left;
     }
 
+    public static Vector2I operator *(Vector2I left, int multiplier)
+    {
+        left.X *= multiplier;
+        left.Y *= multiplier;
+        return left;
+    }
+
     public override readonly bool Equals(object? obj)
     {
         return obj is Vector2I other && Equals(other);
