@@ -189,8 +189,8 @@ public class SwfShape(DefineShapeXTag shape)
                     {
                         fillStyleIndexOffset = _fillStyles.Count;
                         lineStyleIndexOffset = _lineStyles.Count;
-                        _fillStyles.AddRange(styleChangeRecord.FillStyles.ToList());
-                        _lineStyles.AddRange(styleChangeRecord.LineStyles.ToList());
+                        _fillStyles.AddRange(styleChangeRecord.FillStyles);
+                        _lineStyles.AddRange(styleChangeRecord.LineStyles);
                     }
 
                     if (styleChangeRecord.LineStyle is not null && styleChangeRecord.LineStyle == 0 &&
