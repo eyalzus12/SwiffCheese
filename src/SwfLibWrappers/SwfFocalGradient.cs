@@ -29,8 +29,24 @@ public readonly struct SwfFocalGradient
         (FocalGradientRGBA rgba) => rgba.InterpolationMode
     );
 
-    public double FocalPoint => _internal.Match(
-        (FocalGradientRGB rgb) => rgb.FocalPoint,
-        (FocalGradientRGBA rgba) => rgba.FocalPoint
-    );
+    public double FocalPoint
+    {
+        get
+        {
+            // https://github.com/SavchukSergey/SwfLib/blob/b77bef5e259416170c820e3169dc4350d8c95e06/SwfLib/SwfStreamReader.cs#L28
+            // SwfLib has a bug when reading FocalPoint (and FIXED8 in general): it reads a U16 instead of an S16.
+            // so we fix the value
+
+            double wrong = _internal.Match(
+                (FocalGradientRGB rgb) => rgb.FocalPoint,
+                (FocalGradientRGBA rgba) => rgba.FocalPoint
+            );
+            // this should be safe since floats can represent 1/2^k exactly
+            ushort wrongOriginal = (ushort)(wrong * 256);
+            short correctOriginal = (short)wrongOriginal;
+            double correct = correctOriginal / 256.0;
+
+            return correct;
+        }
+    }
 }
