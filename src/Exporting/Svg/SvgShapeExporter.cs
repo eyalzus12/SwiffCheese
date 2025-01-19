@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using System.Numerics;
 using System.Text;
 using System.Xml.Linq;
 using SwfLib.Data;
 using SwfLib.Gradients;
+using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
 
-public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor = 20) : IShapeExporter
+public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivisor = 20) : IShapeExporter
 {
     private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
 
@@ -138,7 +138,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
             _path.SetAttributeValue("stop-opacity", color.Alpha / 255.0);
     }
 
-    public void MoveTo(Vector2 pos)
+    public void MoveTo(Vector2I pos)
     {
         _currentDrawCommand = "";
         double x = pos.X / unitDivisor;
@@ -146,7 +146,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
         _pathData.Append($"M{x} {y} ");
     }
 
-    public void LineTo(Vector2 pos)
+    public void LineTo(Vector2I pos)
     {
         if (_currentDrawCommand != "L")
         {
@@ -158,7 +158,7 @@ public class SvgShapeExporter(Vector2 position, Vector2 size, double unitDivisor
         _pathData.Append($"{x} {y} ");
     }
 
-    public void CurveTo(Vector2 anchor, Vector2 to)
+    public void CurveTo(Vector2I anchor, Vector2I to)
     {
         if (_currentDrawCommand != "Q")
         {

@@ -1,4 +1,3 @@
-using System;
 using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
@@ -12,12 +11,12 @@ internal static class SvgUtils
 
     internal static double RoundPixels20(double pixels)
     {
-        return Math.Round(pixels, 3);
+        return System.Math.Round(pixels, 3);
     }
 
     internal static double RoundPixels400(double pixels)
     {
-        return Math.Round(pixels, 4);
+        return System.Math.Round(pixels, 4);
     }
 
     internal static string ColorToHexString(SwfColor color)

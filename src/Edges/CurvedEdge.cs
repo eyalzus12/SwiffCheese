@@ -1,10 +1,10 @@
-using System.Numerics;
+using SwiffCheese.Math;
 
 namespace SwiffCheese.Edges;
 
 public class CurvedEdge : StraightEdge, IEdge
 {
-    public Vector2 Control { get; init; }
+    public Vector2I Control { get; init; }
     public override IEdge ReverseWithStyle(int newFillStyleIndex) => new CurvedEdge()
     {
         From = To,

@@ -3,16 +3,15 @@ using System.Linq;
 using System.Collections.Generic;
 using SwfLib.Shapes.Records;
 using SwfLib.Shapes.FillStyles;
-using SixLabors.ImageSharp;
 using SwiffCheese.Edges;
 using SwiffCheese.Exporting;
 using SwiffCheese.Wrappers;
 
 using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
-using CoordMap = System.Collections.Generic.Dictionary<System.Numerics.Vector2, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
+using CoordMap = System.Collections.Generic.Dictionary<SwiffCheese.Math.Vector2I, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
 using SwfLib.Data;
-using System.Numerics;
+using SwiffCheese.Math;
 
 namespace SwiffCheese.Shapes;
 
@@ -48,7 +47,7 @@ public class SwfShape(DefineShapeXTag shape)
         Path path = PathFromEdgeMap(_fillEdgesMaps[groupIndex]);
         if (path.Count == 0)
             return;
-        Vector2 pos = new(int.MaxValue, int.MaxValue);
+        Vector2I pos = new(int.MaxValue, int.MaxValue);
         int fillStyleIdx = int.MaxValue;
         exporter.BeginFills();
         foreach (IEdge edge in path)
@@ -59,7 +58,7 @@ public class SwfShape(DefineShapeXTag shape)
                     exporter.EndFill();
 
                 fillStyleIdx = edge.FillStyleIndex;
-                pos = new Point(int.MaxValue, int.MaxValue);
+                pos = new(int.MaxValue, int.MaxValue);
 
                 if (fillStyleIdx == 0)
                     exporter.BeginFill(new SwfRGB(0, 0, 0));
@@ -115,8 +114,8 @@ public class SwfShape(DefineShapeXTag shape)
         Path path = PathFromEdgeMap(_lineEdgeMaps[groupIndex]);
         if (path.Count == 0)
             return;
-        Vector2 pos = new(int.MaxValue, int.MaxValue);
-        Vector2 lastMove = pos;
+        Vector2I pos = new(int.MaxValue, int.MaxValue);
+        Vector2I lastMove = pos;
         int lineStyleIndex = int.MaxValue;
 
         exporter.BeginLines();
@@ -156,10 +155,10 @@ public class SwfShape(DefineShapeXTag shape)
     {
         if (_edgeMapsCreated)
             return;
-        Point position = Point.Empty;
-        Point from;
-        Point to;
-        Point control;
+        Vector2I position = Vector2I.Zero;
+        Vector2I from;
+        Vector2I to;
+        Vector2I control;
         int fillStyleIndexOffset = 0;
         int lineStyleIndexOffset = 0;
         int currentFillStyleIndex0 = 0;
@@ -231,25 +230,25 @@ public class SwfShape(DefineShapeXTag shape)
 
                     if (styleChangeRecord.StateMoveTo)
                     {
-                        position = new Point(styleChangeRecord.MoveDeltaX, styleChangeRecord.MoveDeltaY);
+                        position = new(styleChangeRecord.MoveDeltaX, styleChangeRecord.MoveDeltaY);
                     }
                     break;
                 case ShapeRecordType.StraightEdge:
                     StraightEdgeShapeRecord straightEdgeRecord = shapeRecord.ToStraightEdgeRecord();
-                    from = new Point(position.X, position.Y);
-                    Size delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
+                    from = new(position.X, position.Y);
+                    Vector2I delta = new(straightEdgeRecord.DeltaX, straightEdgeRecord.DeltaY);
                     position += delta;
-                    to = new Point(position.X, position.Y);
+                    to = new(position.X, position.Y);
                     subPath.Add(new StraightEdge { From = from, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
                     break;
                 case ShapeRecordType.CurvedEdgeRecord:
                     CurvedEdgeShapeRecord curvedEdgeRecord = shapeRecord.ToCurvedEdgeRecord();
-                    from = new Point(position.X, position.Y);
-                    Size controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
+                    from = new(position.X, position.Y);
+                    Vector2I controlDelta = new(curvedEdgeRecord.ControlDeltaX, curvedEdgeRecord.ControlDeltaY);
                     control = position + controlDelta;
-                    Size anchorDelta = new(curvedEdgeRecord.AnchorDeltaX, curvedEdgeRecord.AnchorDeltaY);
+                    Vector2I anchorDelta = new(curvedEdgeRecord.AnchorDeltaX, curvedEdgeRecord.AnchorDeltaY);
                     position = control + anchorDelta;
-                    to = new Point(position.X, position.Y);
+                    to = new(position.X, position.Y);
                     subPath.Add(new CurvedEdge { From = from, Control = control, To = to, LineStyleIndex = currentLineStyleIndex, FillStyleIndex = currentFillStyleIndex1 });
                     break;
                 case ShapeRecordType.EndRecord:
@@ -353,7 +352,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private IEdge? FindNextEdgeInCoordMap(IEdge edge)
     {
-        Vector2 key = edge.To;
+        Vector2I key = edge.To;
         if (!_coordMap.TryGetValue(key, out Path? path))
             return null;
         if (path.Count == 0)
@@ -363,7 +362,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private IEdge? FindNextEdgeInReverseCoordMap(IEdge edge)
     {
-        Vector2 key = edge.To;
+        Vector2I key = edge.To;
         if (!_reverseCoordMap.TryGetValue(key, out Path? path))
             return null;
         if (path.Count == 0)
@@ -373,7 +372,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void RemoveEdgeFromCoordMap(IEdge edge)
     {
-        Vector2 key = edge.From;
+        Vector2I key = edge.From;
         if (_coordMap.TryGetValue(key, out Path? value))
         {
             if (value.Count == 1) _coordMap.Remove(key);
@@ -383,7 +382,7 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void RemoveEdgeFromReverseCoordMap(IEdge edge)
     {
-        Vector2 key = edge.To;
+        Vector2I key = edge.To;
         if (_reverseCoordMap.TryGetValue(key, out Path? value))
         {
             if (value.Count == 1) _reverseCoordMap.Remove(key);
@@ -396,7 +395,7 @@ public class SwfShape(DefineShapeXTag shape)
         _coordMap.Clear();
         for (int i = 0; i < path.Count; ++i)
         {
-            Vector2 key = path[i].From;
+            Vector2I key = path[i].From;
             if (!_coordMap.ContainsKey(key)) _coordMap[key] = [];
             _coordMap[key].Add(path[i]);
         }
@@ -407,7 +406,7 @@ public class SwfShape(DefineShapeXTag shape)
         _reverseCoordMap.Clear();
         for (int i = 0; i < path.Count; ++i)
         {
-            Vector2 key = path[i].To;
+            Vector2I key = path[i].To;
             if (!_reverseCoordMap.ContainsKey(key)) _reverseCoordMap[key] = [];
             _reverseCoordMap[key].Add(path[i]);
         }
@@ -415,18 +414,18 @@ public class SwfShape(DefineShapeXTag shape)
 
     private void UpdateEdgeInCoordMap(IEdge edge, IEdge newEdge)
     {
-        Vector2 key1 = edge.From;
+        Vector2I key1 = edge.From;
         _coordMap[key1].Remove(edge);
-        Vector2 key2 = newEdge.From;
+        Vector2I key2 = newEdge.From;
         if (!_coordMap.ContainsKey(key2)) _coordMap[key2] = [];
         _coordMap[key2].Add(newEdge);
     }
 
     private void UpdateEdgeInReverseCoordMap(IEdge edge, IEdge newEdge)
     {
-        Vector2 key1 = edge.To;
+        Vector2I key1 = edge.To;
         _reverseCoordMap[key1].Remove(edge);
-        Vector2 key2 = newEdge.To;
+        Vector2I key2 = newEdge.To;
         if (!_reverseCoordMap.ContainsKey(key2)) _reverseCoordMap[key2] = [];
         _reverseCoordMap[key2].Add(newEdge);
     }

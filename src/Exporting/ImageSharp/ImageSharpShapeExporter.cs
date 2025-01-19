@@ -7,7 +7,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SwfLib.Gradients;
 using SwiffCheese.Exporting.ImageSharp.Brushes;
-using SwiffCheese.Utils;
+using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.ImageSharp;
@@ -29,11 +29,11 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
     private Brush? _fill;
     private Pen? _line;
 
-    private Vector2 GetRealLocation(Vector2 point) => point / unitDivisor + offset;
+    private Vector2 GetRealLocation(Vector2I point) => new Vector2(point.X / unitDivisor, point.Y / unitDivisor) + offset;
 
     public void BeginShape()
     {
-        _builder.MoveTo(GetRealLocation(Point.Empty));
+        _builder.MoveTo(GetRealLocation(Vector2I.Zero));
     }
 
     public void EndShape()
@@ -90,7 +90,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
+        Matrix3x2 gradientMat = ImageSharpUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -120,7 +120,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
+        Matrix3x2 gradientMat = ImageSharpUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -150,7 +150,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
             _ => GradientRepetitionMode.None
         };
 
-        Matrix3x2 gradientMat = SwfUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
+        Matrix3x2 gradientMat = ImageSharpUtils.SwfMatrixToMatrix3x2(fillStyle.GradientMatrix);
         // apply draw transform
         gradientMat *= 1 / unitDivisor;
         gradientMat.M31 += offset.X; gradientMat.M32 += offset.Y;
@@ -169,17 +169,17 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         _line = new SolidPen(SwfColorToImageSharpColor(color), float.IsNaN(thickness) ? 1 : thickness);
     }
 
-    public void MoveTo(Vector2 pos)
+    public void MoveTo(Vector2I pos)
     {
         _builder.MoveTo(GetRealLocation(pos));
     }
 
-    public void LineTo(Vector2 pos)
+    public void LineTo(Vector2I pos)
     {
         _builder.LineTo(GetRealLocation(pos));
     }
 
-    public void CurveTo(Vector2 anchor, Vector2 to)
+    public void CurveTo(Vector2I anchor, Vector2I to)
     {
         _builder.QuadraticBezierTo(GetRealLocation(anchor), GetRealLocation(to));
     }
@@ -191,7 +191,7 @@ public class ImageSharpShapeExporter(Image<Rgba32> canvas, Vector2 offset = defa
         if (_fill is not null) canvas.Mutate(x => x.Fill(_DrawingOptions, _fill, path));
         if (_line is not null) canvas.Mutate(x => x.Draw(_DrawingOptions, _line, path));
 
-        _builder.Clear(); _builder.MoveTo(GetRealLocation(Point.Empty));
+        _builder.Clear(); _builder.MoveTo(GetRealLocation(Vector2I.Zero));
         _fill = null;
         _line = null;
     }
