@@ -104,13 +104,13 @@ public class Sample
         {
             int x = shape.ShapeBounds.XMin;
             int y = shape.ShapeBounds.YMin;
-            Vector2I pos = new(x, y);
             int w = shape.ShapeBounds.XMax - shape.ShapeBounds.XMin;
             int h = shape.ShapeBounds.YMax - shape.ShapeBounds.YMin;
-            Vector2I size = new(w, h);
 
+            SvgMatrix mat = new(TranslateX: -x, TranslateY: -y);
+            SvgSize size = new(w, h);
             SwfShape compiledShape = new(shape);
-            SvgShapeExporter exporter = new(pos, size, 20);
+            SvgShapeExporter exporter = new(size, mat);
             compiledShape.Export(exporter);
             exporter.Document.Root?.SetAttributeValue("shape-rendering", "crispEdges");
 

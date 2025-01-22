@@ -8,8 +8,13 @@ using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
 
-public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivisor = 20) : IShapeExporter
+public readonly record struct SvgSize(double Width, double Height);
+public readonly record struct SvgMatrix(double ScaleX = 1, double RotateSkew0 = 0, double RotateSkew1 = 0, double ScaleY = 1, double TranslateX = 0, double TranslateY = 0);
+
+public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporter
 {
+
+    private const double SWF_UNIT_DIVISOR = 20;
     private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
 
     public XDocument Document { get; private set; } = null!;
@@ -37,19 +42,17 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
 
     public void BeginShape()
     {
-        double scale = 1.0;
-        double offsetX = position.X / unitDivisor;
-        double offsetY = position.Y / unitDivisor;
-        string transform = SvgUtils.SvgMatrixString(scale, 0, 0, scale, -offsetX, -offsetY);
+        string transformString = SvgUtils.SvgMatrixString(
+            transform.ScaleX, transform.RotateSkew0, transform.RotateSkew1, transform.ScaleY,
+            transform.TranslateX, transform.TranslateY
+        );
 
         _group = new XElement(xmlns + "g");
-        _group.SetAttributeValue("transform", transform);
+        _group.SetAttributeValue("transform", transformString);
 
-        double width = size.X / unitDivisor;
-        double height = size.Y / unitDivisor;
         _svg = new(xmlns + "svg", _group);
-        _svg.SetAttributeValue("width", width);
-        _svg.SetAttributeValue("height", height);
+        _svg.SetAttributeValue("width", size.Width);
+        _svg.SetAttributeValue("height", size.Height);
 
         Document = new(new XDeclaration("1.0", "UTF-8", "no"), _svg);
 
@@ -130,7 +133,7 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
     public void LineStyle(float thickness = float.NaN, SwfColor color = default)
     {
         FinalizePath();
-        double strokeWidth = thickness / unitDivisor;
+        double strokeWidth = thickness / SWF_UNIT_DIVISOR;
         _path.SetAttributeValue("fill", "none");
         _path.SetAttributeValue("stroke", SvgUtils.ColorToHexString(color));
         _path.SetAttributeValue("stroke-width", strokeWidth);
@@ -141,8 +144,8 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
     public void MoveTo(Vector2I pos)
     {
         _currentDrawCommand = "";
-        double x = pos.X / unitDivisor;
-        double y = pos.Y / unitDivisor;
+        double x = pos.X / SWF_UNIT_DIVISOR;
+        double y = pos.Y / SWF_UNIT_DIVISOR;
         _pathData.Append($"M{x} {y} ");
     }
 
@@ -153,8 +156,8 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
             _currentDrawCommand = "L";
             _pathData.Append('L');
         }
-        double x = pos.X / unitDivisor;
-        double y = pos.Y / unitDivisor;
+        double x = pos.X / SWF_UNIT_DIVISOR;
+        double y = pos.Y / SWF_UNIT_DIVISOR;
         _pathData.Append($"{x} {y} ");
     }
 
@@ -165,10 +168,10 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
             _currentDrawCommand = "Q";
             _pathData.Append('Q');
         }
-        double ax = anchor.X / unitDivisor;
-        double ay = anchor.Y / unitDivisor;
-        double x = to.X / unitDivisor;
-        double y = to.Y / unitDivisor;
+        double ax = anchor.X / SWF_UNIT_DIVISOR;
+        double ay = anchor.Y / SWF_UNIT_DIVISOR;
+        double x = to.X / SWF_UNIT_DIVISOR;
+        double y = to.Y / SWF_UNIT_DIVISOR;
         _pathData.Append($"{ax} {ay} {x} {y} ");
     }
 
@@ -191,8 +194,8 @@ public class SvgShapeExporter(Vector2I position, Vector2I size, double unitDivis
         double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0);
         double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1);
         double scaleY = SvgUtils.RoundPixels400(matrix.ScaleY);
-        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX / unitDivisor);
-        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY / unitDivisor);
+        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX / SWF_UNIT_DIVISOR);
+        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY / SWF_UNIT_DIVISOR);
         string transform = SvgUtils.SvgMatrixString(scaleX, rotateSkew0, rotateSkew1, scaleY, translateX, translateY);
         gradient.SetAttributeValue("gradientTransform", transform);
 
