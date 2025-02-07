@@ -138,7 +138,9 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         _path.SetAttributeValue("stroke", SvgUtils.ColorToHexString(color));
         _path.SetAttributeValue("stroke-width", strokeWidth);
         if (color.Alpha != 255)
-            _path.SetAttributeValue("stop-opacity", color.Alpha / 255.0);
+            _path.SetAttributeValue("stroke-opacity", color.Alpha / 255.0);
+        _path.SetAttributeValue("stroke-linecap", "round");
+        _path.SetAttributeValue("stroke-linejoin", "miter-clip");
     }
 
     public void MoveTo(Vector2I pos)
