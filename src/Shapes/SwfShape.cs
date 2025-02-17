@@ -17,9 +17,9 @@ namespace SwiffCheese.Shapes;
 
 public class SwfShape(DefineShapeXTag shape)
 {
-    private readonly List<ShapeRecord> _records = shape.ShapeRecords.ToList();
-    private readonly List<FillStyle> _fillStyles = shape.FillStyles.ToList();
-    private readonly List<LineStyle> _lineStyles = shape.LineStyles.ToList();
+    private readonly List<ShapeRecord> _records = [.. shape.ShapeRecords];
+    private readonly List<FillStyle> _fillStyles = [.. shape.FillStyles];
+    private readonly List<LineStyle> _lineStyles = [.. shape.LineStyles];
 
     private readonly List<EdgeMap> _fillEdgesMaps = [];
     private EdgeMap _currentFillEdgeMap = [];

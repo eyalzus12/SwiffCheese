@@ -7,25 +7,25 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct SwfGradient
 {
-    private readonly OneOf<GradientRGB, GradientRGBA> _internal;
+    public OneOf<GradientRGB, GradientRGBA> Internal { get; }
 
-    public SwfGradient(GradientRGB rgb) => _internal = rgb;
+    public SwfGradient(GradientRGB rgb) => Internal = rgb;
     public static implicit operator SwfGradient(GradientRGB rgb) => new(rgb);
-    public SwfGradient(GradientRGBA rgba) => _internal = rgba;
+    public SwfGradient(GradientRGBA rgba) => Internal = rgba;
     public static implicit operator SwfGradient(GradientRGBA rgba) => new(rgba);
 
-    public IEnumerable<SwfGradientRecord> GradientRecords => _internal.Match(
-        (GradientRGB rgb) => rgb.GradientRecords.Select(_ => new SwfGradientRecord(_)),
-        (GradientRGBA rgba) => rgba.GradientRecords.Select(_ => new SwfGradientRecord(_))
+    public IEnumerable<SwfGradientRecord> GradientRecords => Internal.Match(
+        rgb => rgb.GradientRecords.Select(_ => new SwfGradientRecord(_)),
+        rgba => rgba.GradientRecords.Select(_ => new SwfGradientRecord(_))
     );
 
-    public SpreadMode SpreadMode => _internal.Match(
-        (GradientRGB rgb) => rgb.SpreadMode,
-        (GradientRGBA rgba) => rgba.SpreadMode
+    public SpreadMode SpreadMode => Internal.Match(
+        rgb => rgb.SpreadMode,
+        rgba => rgba.SpreadMode
     );
 
-    public InterpolationMode InterpolationMode => _internal.Match(
-        (GradientRGB rgb) => rgb.InterpolationMode,
-        (GradientRGBA rgba) => rgba.InterpolationMode
+    public InterpolationMode InterpolationMode => Internal.Match(
+        rgb => rgb.InterpolationMode,
+        rgba => rgba.InterpolationMode
     );
 }

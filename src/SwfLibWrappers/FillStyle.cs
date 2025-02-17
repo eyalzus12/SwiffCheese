@@ -5,47 +5,35 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct FillStyle
 {
-    private readonly OneOf<FillStyleRGB, FillStyleRGBA> _internal;
+    public OneOf<FillStyleRGB, FillStyleRGBA> Internal { get; }
 
-    public FillStyle(FillStyleRGB rgb) => _internal = rgb;
+    public FillStyle(FillStyleRGB rgb) => Internal = rgb;
     public static implicit operator FillStyle(FillStyleRGB rgb) => new(rgb);
-    public FillStyle(FillStyleRGBA rgba) => _internal = rgba;
+    public FillStyle(FillStyleRGBA rgba) => Internal = rgba;
     public static implicit operator FillStyle(FillStyleRGBA rgba) => new(rgba);
 
-    public FillStyleType Type => _internal.Match(
-        (FillStyleRGB rgb) => rgb.Type,
-        (FillStyleRGBA rgba) => rgba.Type
+    public FillStyleType Type => Internal.Match(
+        rgb => rgb.Type,
+        rgba => rgba.Type
     );
 
-    public SolidFillStyle ToSolidFillStyle()
-    {
-        return _internal.Match(
-            (FillStyleRGB rgb) => new SolidFillStyle((SolidFillStyleRGB)rgb),
-            (FillStyleRGBA rgba) => new SolidFillStyle((SolidFillStyleRGBA)rgba)
-        );
-    }
+    public SolidFillStyle ToSolidFillStyle() => Internal.Match(
+        rgb => new SolidFillStyle((SolidFillStyleRGB)rgb),
+        rgba => new SolidFillStyle((SolidFillStyleRGBA)rgba)
+    );
 
-    public LinearGradientFillStyle ToLinearGradientFillStyle()
-    {
-        return _internal.Match(
-            (FillStyleRGB rgb) => new LinearGradientFillStyle((LinearGradientFillStyleRGB)rgb),
-            (FillStyleRGBA rgba) => new LinearGradientFillStyle((LinearGradientFillStyleRGBA)rgba)
-        );
-    }
+    public LinearGradientFillStyle ToLinearGradientFillStyle() => Internal.Match(
+        rgb => new LinearGradientFillStyle((LinearGradientFillStyleRGB)rgb),
+        rgba => new LinearGradientFillStyle((LinearGradientFillStyleRGBA)rgba)
+    );
 
-    public RadialGradientFillStyle ToRadialGradientFillStyle()
-    {
-        return _internal.Match(
-            (FillStyleRGB rgb) => new RadialGradientFillStyle((RadialGradientFillStyleRGB)rgb),
-            (FillStyleRGBA rgba) => new RadialGradientFillStyle((RadialGradientFillStyleRGBA)rgba)
-        );
-    }
+    public RadialGradientFillStyle ToRadialGradientFillStyle() => Internal.Match(
+        rgb => new RadialGradientFillStyle((RadialGradientFillStyleRGB)rgb),
+        rgba => new RadialGradientFillStyle((RadialGradientFillStyleRGBA)rgba)
+    );
 
-    public FocalGradientFillStyle ToFocalGradientFillStyle()
-    {
-        return _internal.Match(
-            (FillStyleRGB rgb) => new FocalGradientFillStyle((FocalGradientFillStyleRGB)rgb),
-            (FillStyleRGBA rgba) => new FocalGradientFillStyle((FocalGradientFillStyleRGBA)rgba)
-        );
-    }
+    public FocalGradientFillStyle ToFocalGradientFillStyle() => Internal.Match(
+        rgb => new FocalGradientFillStyle((FocalGradientFillStyleRGB)rgb),
+        rgba => new FocalGradientFillStyle((FocalGradientFillStyleRGBA)rgba)
+    );
 }

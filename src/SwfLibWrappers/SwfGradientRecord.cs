@@ -5,20 +5,20 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct SwfGradientRecord
 {
-    private readonly OneOf<GradientRecordRGB, GradientRecordRGBA> _internal;
+    public OneOf<GradientRecordRGB, GradientRecordRGBA> Internal { get; }
 
-    public SwfGradientRecord(GradientRecordRGB rgb) => _internal = rgb;
+    public SwfGradientRecord(GradientRecordRGB rgb) => Internal = rgb;
     public static implicit operator SwfGradientRecord(GradientRecordRGB rgb) => new(rgb);
-    public SwfGradientRecord(GradientRecordRGBA rgba) => _internal = rgba;
+    public SwfGradientRecord(GradientRecordRGBA rgba) => Internal = rgba;
     public static implicit operator SwfGradientRecord(GradientRecordRGBA rgba) => new(rgba);
 
-    public byte Ratio => _internal.Match(
-        (GradientRecordRGB rgb) => rgb.Ratio,
-        (GradientRecordRGBA rgba) => rgba.Ratio
+    public byte Ratio => Internal.Match(
+        rgb => rgb.Ratio,
+        rgba => rgba.Ratio
     );
 
-    public SwfColor Color => _internal.Match(
-        (GradientRecordRGB rgb) => new SwfColor(rgb.Color),
-        (GradientRecordRGBA rgba) => new SwfColor(rgba.Color)
+    public SwfColor Color => Internal.Match(
+        rgb => new SwfColor(rgb.Color),
+        rgba => new SwfColor(rgba.Color)
     );
 }

@@ -5,15 +5,15 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct SwfColor
 {
-    private readonly OneOf<SwfRGB, SwfRGBA> _internal;
+    public OneOf<SwfRGB, SwfRGBA> Internal { get; }
 
-    public SwfColor(SwfRGB rgb) => _internal = rgb;
+    public SwfColor(SwfRGB rgb) => Internal = rgb;
     public static implicit operator SwfColor(SwfRGB rgb) => new(rgb);
-    public SwfColor(SwfRGBA rgba) => _internal = rgba;
+    public SwfColor(SwfRGBA rgba) => Internal = rgba;
     public static implicit operator SwfColor(SwfRGBA rgba) => new(rgba);
 
-    public byte Red => _internal.Match((SwfRGB rgb) => rgb.Red, (SwfRGBA rgba) => rgba.Red);
-    public byte Green => _internal.Match((SwfRGB rgb) => rgb.Green, (SwfRGBA rgba) => rgba.Green);
-    public byte Blue => _internal.Match((SwfRGB rgb) => rgb.Blue, (SwfRGBA rgba) => rgba.Blue);
-    public byte Alpha => _internal.Match((SwfRGB rgb) => (byte)255, (SwfRGBA rgba) => rgba.Alpha);
+    public byte Red => Internal.Match(rgb => rgb.Red, rgba => rgba.Red);
+    public byte Green => Internal.Match(rgb => rgb.Green, rgba => rgba.Green);
+    public byte Blue => Internal.Match(rgb => rgb.Blue, rgba => rgba.Blue);
+    public byte Alpha => Internal.Match(rgb => (byte)255, rgba => rgba.Alpha);
 }

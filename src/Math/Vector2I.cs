@@ -2,16 +2,10 @@ using System;
 
 namespace SwiffCheese.Math;
 
-public struct Vector2I : IEquatable<Vector2I>
+public struct Vector2I(int x, int y) : IEquatable<Vector2I>
 {
-    public int X;
-    public int Y;
-
-    public Vector2I(int x, int y)
-    {
-        X = x;
-        Y = y;
-    }
+    public int X = x;
+    public int Y = y;
 
     public static Vector2I Zero => new(0, 0);
 

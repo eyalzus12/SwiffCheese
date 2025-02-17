@@ -5,24 +5,24 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct LineStyle
 {
-    private readonly OneOf<LineStyleRGB, LineStyleRGBA, LineStyleEx> _internal;
+    public OneOf<LineStyleRGB, LineStyleRGBA, LineStyleEx> Internal { get; }
 
-    public LineStyle(LineStyleRGB rgb) => _internal = rgb;
+    public LineStyle(LineStyleRGB rgb) => Internal = rgb;
     public static implicit operator LineStyle(LineStyleRGB rgb) => new(rgb);
-    public LineStyle(LineStyleRGBA rgba) => _internal = rgba;
+    public LineStyle(LineStyleRGBA rgba) => Internal = rgba;
     public static implicit operator LineStyle(LineStyleRGBA rgba) => new(rgba);
-    public LineStyle(LineStyleEx ex) => _internal = ex;
+    public LineStyle(LineStyleEx ex) => Internal = ex;
     public static implicit operator LineStyle(LineStyleEx ex) => new(ex);
 
-    public ushort Width => _internal.Match(
-        (LineStyleRGB rgb) => rgb.Width,
-        (LineStyleRGBA rgba) => rgba.Width,
-        (LineStyleEx ex) => ex.Width
+    public ushort Width => Internal.Match(
+        rgb => rgb.Width,
+        rgba => rgba.Width,
+        ex => ex.Width
     );
 
-    public SwfColor Color => _internal.Match(
-        (LineStyleRGB rgb) => new SwfColor(rgb.Color),
-        (LineStyleRGBA rgba) => new SwfColor(rgba.Color),
-        (LineStyleEx ex) => new SwfColor(ex.Color)
+    public SwfColor Color => Internal.Match(
+        rgb => new SwfColor(rgb.Color),
+        rgba => new SwfColor(rgba.Color),
+        ex => new SwfColor(ex.Color)
     );
 }

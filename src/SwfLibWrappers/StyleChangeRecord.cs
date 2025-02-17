@@ -7,72 +7,72 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct StyleChangeRecord
 {
-    private readonly OneOf<StyleChangeShapeRecordRGB, StyleChangeShapeRecordRGBA, StyleChangeShapeRecordEx> _internal;
+    public OneOf<StyleChangeShapeRecordRGB, StyleChangeShapeRecordRGBA, StyleChangeShapeRecordEx> Internal { get; }
 
-    public StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => _internal = rgb;
+    public StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => Internal = rgb;
     public static implicit operator StyleChangeRecord(StyleChangeShapeRecordRGB rgb) => new(rgb);
-    public StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => _internal = rgba;
+    public StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => Internal = rgba;
     public static implicit operator StyleChangeRecord(StyleChangeShapeRecordRGBA rgba) => new(rgba);
-    public StyleChangeRecord(StyleChangeShapeRecordEx ex) => _internal = ex;
+    public StyleChangeRecord(StyleChangeShapeRecordEx ex) => Internal = ex;
     public static implicit operator StyleChangeRecord(StyleChangeShapeRecordEx ex) => new(ex);
 
-    public uint? FillStyle0 => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.FillStyle0,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.FillStyle0,
-        (StyleChangeShapeRecordEx ex) => ex.FillStyle0
+    public uint? FillStyle0 => Internal.Match(
+        rgb => rgb.FillStyle0,
+        rgba => rgba.FillStyle0,
+        ex => ex.FillStyle0
     );
 
-    public uint? FillStyle1 => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.FillStyle1,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.FillStyle1,
-        (StyleChangeShapeRecordEx ex) => ex.FillStyle1
+    public uint? FillStyle1 => Internal.Match(
+        rgb => rgb.FillStyle1,
+        rgba => rgba.FillStyle1,
+        ex => ex.FillStyle1
     );
 
-    public uint? LineStyle => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.LineStyle,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.LineStyle,
-        (StyleChangeShapeRecordEx ex) => ex.LineStyle
+    public uint? LineStyle => Internal.Match(
+        rgb => rgb.LineStyle,
+        rgba => rgba.LineStyle,
+        ex => ex.LineStyle
     );
 
-    public bool StateMoveTo => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.StateMoveTo,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.StateMoveTo,
-        (StyleChangeShapeRecordEx ex) => ex.StateMoveTo
+    public bool StateMoveTo => Internal.Match(
+        rgb => rgb.StateMoveTo,
+        rgba => rgba.StateMoveTo,
+        ex => ex.StateMoveTo
     );
 
-    public bool StateNewStyles => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.StateNewStyles,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.StateNewStyles,
-        (StyleChangeShapeRecordEx ex) => ex.StateNewStyles
+    public bool StateNewStyles => Internal.Match(
+        rgb => rgb.StateNewStyles,
+        rgba => rgba.StateNewStyles,
+        ex => ex.StateNewStyles
     );
 
-    public int MoveDeltaX => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.MoveDeltaX,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.MoveDeltaX,
-        (StyleChangeShapeRecordEx ex) => ex.MoveDeltaX
+    public int MoveDeltaX => Internal.Match(
+        rgb => rgb.MoveDeltaX,
+        rgba => rgba.MoveDeltaX,
+        ex => ex.MoveDeltaX
     );
 
-    public int MoveDeltaY => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.MoveDeltaY,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.MoveDeltaY,
-        (StyleChangeShapeRecordEx ex) => ex.MoveDeltaY
+    public int MoveDeltaY => Internal.Match(
+        rgb => rgb.MoveDeltaY,
+        rgba => rgba.MoveDeltaY,
+        ex => ex.MoveDeltaY
     );
 
-    public ShapeRecordType Type => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.Type,
-        (StyleChangeShapeRecordRGBA rgba) => rgba.Type,
-        (StyleChangeShapeRecordEx ex) => ex.Type
+    public ShapeRecordType Type => Internal.Match(
+        rgb => rgb.Type,
+        rgba => rgba.Type,
+        ex => ex.Type
     );
 
-    public IEnumerable<FillStyle> FillStyles => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.FillStyles.Select(_ => new FillStyle(_)),
-        (StyleChangeShapeRecordRGBA rgba) => rgba.FillStyles.Select(_ => new FillStyle(_)),
-        (StyleChangeShapeRecordEx ex) => ex.FillStyles.Select(_ => new FillStyle(_))
+    public IEnumerable<FillStyle> FillStyles => Internal.Match(
+        rgb => rgb.FillStyles.Select(_ => new FillStyle(_)),
+        rgba => rgba.FillStyles.Select(_ => new FillStyle(_)),
+        ex => ex.FillStyles.Select(_ => new FillStyle(_))
     );
 
-    public IEnumerable<LineStyle> LineStyles => _internal.Match(
-        (StyleChangeShapeRecordRGB rgb) => rgb.LineStyles.Select(_ => new LineStyle(_)),
-        (StyleChangeShapeRecordRGBA rgba) => rgba.LineStyles.Select(_ => new LineStyle(_)),
-        (StyleChangeShapeRecordEx ex) => ex.LineStyles.Select(_ => new LineStyle(_))
+    public IEnumerable<LineStyle> LineStyles => Internal.Match(
+        rgb => rgb.LineStyles.Select(_ => new LineStyle(_)),
+        rgba => rgba.LineStyles.Select(_ => new LineStyle(_)),
+        ex => ex.LineStyles.Select(_ => new LineStyle(_))
     );
 }

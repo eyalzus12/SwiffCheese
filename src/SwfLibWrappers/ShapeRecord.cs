@@ -5,39 +5,39 @@ namespace SwiffCheese.Wrappers;
 
 public readonly struct ShapeRecord
 {
-    private readonly OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx> _internal;
+    public OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx> Internal { get; }
 
-    public ShapeRecord(IShapeRecordRGB record) => _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT0(record);
-    public ShapeRecord(IShapeRecordRGBA record) => _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT1(record);
-    public ShapeRecord(IShapeRecordEx record) => _internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT2(record);
+    public ShapeRecord(IShapeRecordRGB record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT0(record);
+    public ShapeRecord(IShapeRecordRGBA record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT1(record);
+    public ShapeRecord(IShapeRecordEx record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT2(record);
 
-    public ShapeRecordType Type => _internal.Match(
-        (IShapeRecordRGB rgb) => rgb.Type,
-        (IShapeRecordRGBA rgba) => rgba.Type,
-        (IShapeRecordEx rgba) => rgba.Type
+    public ShapeRecordType Type => Internal.Match(
+        rgb => rgb.Type,
+        rgba => rgba.Type,
+        rgba => rgba.Type
     );
 
-    public StyleChangeRecord ToStyleChangeRecord() => _internal.Match(
-        (IShapeRecordRGB rgb) => new StyleChangeRecord((StyleChangeShapeRecordRGB)rgb),
-        (IShapeRecordRGBA rgba) => new StyleChangeRecord((StyleChangeShapeRecordRGBA)rgba),
-        (IShapeRecordEx ex) => new StyleChangeRecord((StyleChangeShapeRecordEx)ex)
+    public StyleChangeRecord ToStyleChangeRecord() => Internal.Match(
+        rgb => new StyleChangeRecord((StyleChangeShapeRecordRGB)rgb),
+        rgba => new StyleChangeRecord((StyleChangeShapeRecordRGBA)rgba),
+        ex => new StyleChangeRecord((StyleChangeShapeRecordEx)ex)
     );
 
-    public StraightEdgeShapeRecord ToStraightEdgeRecord() => _internal.Match(
-        (IShapeRecordRGB rgb) => (StraightEdgeShapeRecord)rgb,
-        (IShapeRecordRGBA rgba) => (StraightEdgeShapeRecord)rgba,
-        (IShapeRecordEx ex) => (StraightEdgeShapeRecord)ex
+    public StraightEdgeShapeRecord ToStraightEdgeRecord() => Internal.Match(
+        rgb => (StraightEdgeShapeRecord)rgb,
+        rgba => (StraightEdgeShapeRecord)rgba,
+        ex => (StraightEdgeShapeRecord)ex
     );
 
-    public CurvedEdgeShapeRecord ToCurvedEdgeRecord() => _internal.Match(
-        (IShapeRecordRGB rgb) => (CurvedEdgeShapeRecord)rgb,
-        (IShapeRecordRGBA rgba) => (CurvedEdgeShapeRecord)rgba,
-        (IShapeRecordEx ex) => (CurvedEdgeShapeRecord)ex
+    public CurvedEdgeShapeRecord ToCurvedEdgeRecord() => Internal.Match(
+        rgb => (CurvedEdgeShapeRecord)rgb,
+        rgba => (CurvedEdgeShapeRecord)rgba,
+        ex => (CurvedEdgeShapeRecord)ex
     );
 
-    public EndShapeRecord ToEndShapeRecord() => _internal.Match(
-        (IShapeRecordRGB rgb) => (EndShapeRecord)rgb,
-        (IShapeRecordRGBA rgba) => (EndShapeRecord)rgba,
-        (IShapeRecordEx ex) => (EndShapeRecord)ex
+    public EndShapeRecord ToEndShapeRecord() => Internal.Match(
+        rgb => (EndShapeRecord)rgb,
+        rgba => (EndShapeRecord)rgba,
+        ex => (EndShapeRecord)ex
     );
 }
