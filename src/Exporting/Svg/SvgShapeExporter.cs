@@ -192,6 +192,14 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
 
     private void PopulateGradientElement(XElement gradient, IEnumerable<SwfGradientRecord> records, SwfMatrix matrix, SpreadMode spreadMode, InterpolationMode interpolationMode, double? focalPointRatio = null)
     {
+        // edge case. not mentioned in spec, and flash seems to just do this thing?
+        // weird af
+        if (matrix.ScaleX == 0 || matrix.ScaleY == 0)
+        {
+            matrix.ScaleY = matrix.ScaleX = 1;
+            matrix.RotateSkew1 = matrix.RotateSkew0 = 0;
+        }
+
         double scaleX = SvgUtils.RoundPixels400(matrix.ScaleX);
         double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0);
         double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1);
