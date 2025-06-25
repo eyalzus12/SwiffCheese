@@ -87,7 +87,9 @@ public class SwfShape(DefineShapeXTag shape)
                         case FillStyleType.ClippedBitmap:
                         case FillStyleType.NonSmoothedRepeatingBitmap:
                         case FillStyleType.NonSmoothedClippedBitmap:
-                            throw new NotImplementedException($"Unsupported fill style type {fillStyle.Type}");
+                            BitmapFillStyle bitmapFillStyle = fillStyle.ToBitmapFillStyle();
+                            exporter.BeginBitmapFill(bitmapFillStyle);
+                            break;
                         default:
                             throw new ArgumentException($"Invalid fill style type {fillStyle.Type}");
                     }

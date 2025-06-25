@@ -36,4 +36,9 @@ public readonly struct FillStyle
         rgb => new FocalGradientFillStyle((FocalGradientFillStyleRGB)rgb),
         rgba => new FocalGradientFillStyle((FocalGradientFillStyleRGBA)rgba)
     );
+
+    public BitmapFillStyle ToBitmapFillStyle() => Internal.Match(
+        rgb => new BitmapFillStyle((BitmapFillStyleRGB)rgb),
+        rgba => new BitmapFillStyle((BitmapFillStyleRGBA)rgba)
+    );
 }

@@ -15,6 +15,7 @@ public interface IShapeExporter
     void BeginLinearGradientFill(LinearGradientFillStyle fillStyle);
     void BeginRadialGradientFill(RadialGradientFillStyle fillStyle);
     void BeginFocalGradientFill(FocalGradientFillStyle fillStyle);
+    void BeginBitmapFill(BitmapFillStyle fillStyle);
     void EndFill();
     void LineStyle(float thickness = float.NaN, SwfColor color = default);
     void MoveTo(Vector2I pos);

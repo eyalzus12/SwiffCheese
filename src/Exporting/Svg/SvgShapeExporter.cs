@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Xml.Linq;
 using SwfLib.Data;
 using SwfLib.Gradients;
+using SwfLib.Tags.BitmapTags;
 using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
@@ -11,9 +14,13 @@ namespace SwiffCheese.Exporting.Svg;
 public readonly record struct SvgSize(double Width, double Height);
 public readonly record struct SvgMatrix(double ScaleX = 1, double RotateSkew0 = 0, double RotateSkew1 = 0, double ScaleY = 1, double TranslateX = 0, double TranslateY = 0);
 
-public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporter
+public interface ISwfAccessor
 {
+    public bool TryGetBitmapById(ushort id, [MaybeNullWhen(false)] out BitmapBaseTag bitmapTag);
+}
 
+public class SvgShapeExporter(SvgSize size, SvgMatrix transform, ISwfAccessor? accessor = null) : IShapeExporter
+{
     private const double SWF_UNIT_DIVISOR = 20;
     private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
 
@@ -25,7 +32,8 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
     private XElement _group = null!;
     private XElement _path = null!;
     private XElement? _defs;
-    private int _gradientCount;
+    private uint _gradientCount;
+    private uint _patternCount;
 
     private XElement Defs
     {
@@ -59,6 +67,7 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         _path = new(xmlns + "path");
         _pathData.Clear();
         _gradientCount = 0;
+        _patternCount = 0;
     }
 
     public void EndShape()
@@ -123,6 +132,14 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         SwfFocalGradient gradient = fillStyle.Gradient;
         PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, gradient.FocalPoint);
         AddGradientElement(gradientElement);
+    }
+
+    public void BeginBitmapFill(BitmapFillStyle fillStyle)
+    {
+        FinalizePath();
+        XElement patternElement = new(xmlns + "pattern");
+        PopulatePatternElement(patternElement, fillStyle);
+        AddPatternElement(patternElement);
     }
 
     public void EndFill()
@@ -251,6 +268,27 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         }
     }
 
+    private void PopulatePatternElement(XElement pattern, BitmapFillStyle bitmapFillStyle)
+    {
+        if (accessor is null)
+            throw new InvalidOperationException("Bitmap fill styles are not supported without providing an swf accessor");
+
+        SwfMatrix matrix = bitmapFillStyle.BitmapMatrix;
+        double scaleX = SvgUtils.RoundPixels400(matrix.ScaleX);
+        double rotateSkew0 = SvgUtils.RoundPixels400(matrix.RotateSkew0);
+        double rotateSkew1 = SvgUtils.RoundPixels400(matrix.RotateSkew1);
+        double scaleY = SvgUtils.RoundPixels400(matrix.ScaleY);
+        double translateX = SvgUtils.RoundPixels400(matrix.TranslateX / SWF_UNIT_DIVISOR);
+        double translateY = SvgUtils.RoundPixels400(matrix.TranslateY / SWF_UNIT_DIVISOR);
+        string transform = SvgUtils.SvgMatrixString(scaleX, rotateSkew0, rotateSkew1, scaleY, translateX, translateY);
+        pattern.SetAttributeValue("patternTransform", transform);
+        ushort bitmapId = bitmapFillStyle.BitmapID;
+        if (!accessor.TryGetBitmapById(bitmapId, out BitmapBaseTag? bitmapTag))
+            throw new InvalidOperationException($"Could not find bitmap id {bitmapId}");
+        throw new Exception(bitmapTag.GetType().Name);
+        
+    }
+
     private void AddGradientElement(XElement gradientElement)
     {
         string gradientId = $"gradient{_gradientCount++}";
@@ -259,5 +297,13 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         _path.SetAttributeValue("fill", $"url(#{gradientId})");
         _path.SetAttributeValue("fill-rule", "evenodd");
         Defs.Add(gradientElement);
+    }
+
+    private void AddPatternElement(XElement patternElement)
+    {
+        string patternId = $"pattern{_patternCount++}";
+        patternElement.SetAttributeValue("id", patternId);
+        _path.SetAttributeValue("fill", $"url(#{patternId})");
+        Defs.Add(patternElement);
     }
 }
