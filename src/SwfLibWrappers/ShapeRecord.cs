@@ -8,8 +8,11 @@ public readonly struct ShapeRecord
     public OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx> Internal { get; }
 
     public ShapeRecord(IShapeRecordRGB record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT0(record);
+    public static ShapeRecord New(IShapeRecordRGB record) => new(record);
     public ShapeRecord(IShapeRecordRGBA record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT1(record);
+    public static ShapeRecord New(IShapeRecordRGBA record) => new(record);
     public ShapeRecord(IShapeRecordEx record) => Internal = OneOf<IShapeRecordRGB, IShapeRecordRGBA, IShapeRecordEx>.FromT2(record);
+    public static ShapeRecord New(IShapeRecordEx record) => new(record);
 
     public ShapeRecordType Type => Internal.Match(
         rgb => rgb.Type,

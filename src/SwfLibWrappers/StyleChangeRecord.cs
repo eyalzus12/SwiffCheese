@@ -65,14 +65,14 @@ public readonly struct StyleChangeRecord
     );
 
     public IEnumerable<FillStyle> FillStyles => Internal.Match(
-        rgb => rgb.FillStyles.Select(_ => new FillStyle(_)),
-        rgba => rgba.FillStyles.Select(_ => new FillStyle(_)),
-        ex => ex.FillStyles.Select(_ => new FillStyle(_))
+        rgb => rgb.FillStyles.Select(FillStyle.New),
+        rgba => rgba.FillStyles.Select(FillStyle.New),
+        ex => ex.FillStyles.Select(FillStyle.New)
     );
 
     public IEnumerable<LineStyle> LineStyles => Internal.Match(
-        rgb => rgb.LineStyles.Select(_ => new LineStyle(_)),
-        rgba => rgba.LineStyles.Select(_ => new LineStyle(_)),
-        ex => ex.LineStyles.Select(_ => new LineStyle(_))
+        rgb => rgb.LineStyles.Select(Wrappers.LineStyle.New),
+        rgba => rgba.LineStyles.Select(Wrappers.LineStyle.New),
+        ex => ex.LineStyles.Select(Wrappers.LineStyle.New)
     );
 }

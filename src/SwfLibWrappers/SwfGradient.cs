@@ -15,8 +15,8 @@ public readonly struct SwfGradient
     public static implicit operator SwfGradient(GradientRGBA rgba) => new(rgba);
 
     public IEnumerable<SwfGradientRecord> GradientRecords => Internal.Match(
-        rgb => rgb.GradientRecords.Select(_ => new SwfGradientRecord(_)),
-        rgba => rgba.GradientRecords.Select(_ => new SwfGradientRecord(_))
+        rgb => rgb.GradientRecords.Select(SwfGradientRecord.New),
+        rgba => rgba.GradientRecords.Select(SwfGradientRecord.New)
     );
 
     public SpreadMode SpreadMode => Internal.Match(

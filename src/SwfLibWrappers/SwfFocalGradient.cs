@@ -15,8 +15,8 @@ public readonly struct SwfFocalGradient
     public static implicit operator SwfFocalGradient(FocalGradientRGBA rgba) => new(rgba);
 
     public IEnumerable<SwfGradientRecord> GradientRecords => Internal.Match(
-        rgb => rgb.GradientRecords.Select(_ => new SwfGradientRecord(_)),
-        rgba => rgba.GradientRecords.Select(_ => new SwfGradientRecord(_))
+        rgb => rgb.GradientRecords.Select(SwfGradientRecord.New),
+        rgba => rgba.GradientRecords.Select(SwfGradientRecord.New)
     );
 
     public SpreadMode SpreadMode => Internal.Match(
@@ -29,18 +29,22 @@ public readonly struct SwfFocalGradient
         rgba => rgba.InterpolationMode
     );
 
+
+    // https://github.com/SavchukSergey/SwfLib/blob/b77bef5e259416170c820e3169dc4350d8c95e06/SwfLib/SwfStreamReader.cs#L28
+    // SwfLib has a bug when reading FocalPoint (and FIXED8 in general): it reads a U16 instead of an S16.
+    // so we fix the value
+
+    private double WrongFocalPoint => Internal.Match(
+        rgb => rgb.FocalPoint,
+        rgba => rgba.FocalPoint
+    );
+
     public double FocalPoint
     {
         get
         {
-            // https://github.com/SavchukSergey/SwfLib/blob/b77bef5e259416170c820e3169dc4350d8c95e06/SwfLib/SwfStreamReader.cs#L28
-            // SwfLib has a bug when reading FocalPoint (and FIXED8 in general): it reads a U16 instead of an S16.
-            // so we fix the value
+            double wrong = WrongFocalPoint;
 
-            double wrong = Internal.Match(
-                rgb => rgb.FocalPoint,
-                rgba => rgba.FocalPoint
-            );
             // this should be safe since floats can represent 1/2^k exactly
             ushort wrongOriginal = (ushort)(wrong * 256);
             short correctOriginal = (short)wrongOriginal;

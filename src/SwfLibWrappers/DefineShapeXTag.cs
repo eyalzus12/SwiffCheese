@@ -22,6 +22,7 @@ public readonly struct DefineShapeXTag
             _ => throw new NotImplementedException($"Shape type {shape.GetType().Name} is not supported")
         };
     }
+    public static implicit operator DefineShapeXTag(ShapeBaseTag shape) => new(shape);
 
     public DefineShapeXTag(DefineShapeTag shape) => Internal = shape;
     public static implicit operator DefineShapeXTag(DefineShapeTag shape) => new(shape);
@@ -31,24 +32,24 @@ public readonly struct DefineShapeXTag
     public static implicit operator DefineShapeXTag(DefineShape3Tag shape) => new(shape);
 
     public IEnumerable<FillStyle> FillStyles => Internal.Match(
-        shape => shape.FillStyles.Select(_ => new FillStyle(_)),
-        shape => shape.FillStyles.Select(_ => new FillStyle(_)),
-        shape => shape.FillStyles.Select(_ => new FillStyle(_)),
-        shape => shape.FillStyles.Select(_ => new FillStyle(_))
+        shape => shape.FillStyles.Select(FillStyle.New),
+        shape => shape.FillStyles.Select(FillStyle.New),
+        shape => shape.FillStyles.Select(FillStyle.New),
+        shape => shape.FillStyles.Select(FillStyle.New)
     );
 
     public IEnumerable<LineStyle> LineStyles => Internal.Match(
-        shape => shape.LineStyles.Select(_ => new LineStyle(_)),
-        shape => shape.LineStyles.Select(_ => new LineStyle(_)),
-        shape => shape.LineStyles.Select(_ => new LineStyle(_)),
-        shape => shape.LineStyles.Select(_ => new LineStyle(_))
+        shape => shape.LineStyles.Select(LineStyle.New),
+        shape => shape.LineStyles.Select(LineStyle.New),
+        shape => shape.LineStyles.Select(LineStyle.New),
+        shape => shape.LineStyles.Select(LineStyle.New)
     );
 
     public IEnumerable<ShapeRecord> ShapeRecords => Internal.Match(
-        shape => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
-        shape => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
-        shape => shape.ShapeRecords.Select(_ => new ShapeRecord(_)),
-        shape => shape.ShapeRecords.Select(_ => new ShapeRecord(_))
+        shape => shape.ShapeRecords.Select(ShapeRecord.New),
+        shape => shape.ShapeRecords.Select(ShapeRecord.New),
+        shape => shape.ShapeRecords.Select(ShapeRecord.New),
+        shape => shape.ShapeRecords.Select(ShapeRecord.New)
     );
 
     public ushort ShapeID => Internal.Match(
