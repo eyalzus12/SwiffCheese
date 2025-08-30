@@ -194,7 +194,7 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
     {
         // edge case. not mentioned in spec, and flash seems to just do this thing?
         // weird af
-        if (matrix.ScaleX == 0 || matrix.ScaleY == 0)
+        if (matrix.ScaleX == 0 && matrix.ScaleY == 0 && matrix.RotateSkew1 == 0 && matrix.RotateSkew0 == 0)
         {
             matrix.ScaleY = matrix.ScaleX = 1;
             matrix.RotateSkew1 = matrix.RotateSkew0 = 0;
