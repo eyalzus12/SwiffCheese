@@ -192,8 +192,8 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
 
     private void PopulateGradientElement(XElement gradient, IEnumerable<SwfGradientRecord> records, SwfMatrix matrix, SpreadMode spreadMode, InterpolationMode interpolationMode, double? focalPointRatio = null)
     {
-        // edge case. not mentioned in spec, and flash seems to just do this thing?
-        // weird af
+        // Undocumented edge case. Flash's behavior seems to differ from other renderers.
+        // Required for Seven's eyes and Bubble Tag's bubble.
         if (matrix.ScaleX == 0 && matrix.ScaleY == 0 && matrix.RotateSkew1 == 0 && matrix.RotateSkew0 == 0)
         {
             matrix.ScaleY = matrix.ScaleX = 1;
@@ -240,14 +240,38 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         if (interpolationMode == InterpolationMode.Linear)
             gradient.SetAttributeValue("color-interpolation", "linearRGB");
 
+        // Ratio handling logic taken from jpexs BitmapExporter: https://github.com/jindrapetrik/jpexs-decompiler/blob/bf4b6e33b77b91e442eb91b8174a07e329ccca8d/libsrc/ffdec_lib/src/com/jpexs/decompiler/flash/exporters/shape/BitmapExporter.java#L260
+        // Required for Hugin's glasses to colorswap correctly.
+        SwfGradientRecord? prev = null;
+        int lastRatio = -1;
         foreach (SwfGradientRecord record in records)
         {
+            // same offset as previous. move a tiny bit forward.
+            if (prev is not null && prev.Value.Ratio == record.Ratio)
+            {
+                if (lastRatio < 255) lastRatio++;
+            }
+            // new relevant offset. set.
+            else if (record.Ratio > lastRatio)
+            {
+                lastRatio = record.Ratio;
+            }
+            // new offset is before... move forward.
+            else
+            {
+                if (lastRatio < 255) lastRatio++;
+            }
+
             XElement entry = new(xmlns + "stop");
-            entry.SetAttributeValue("offset", record.Ratio / 255.0);
+            entry.SetAttributeValue("offset", lastRatio / 255.0);
             entry.SetAttributeValue("stop-color", SvgUtils.ColorToHexString(record.Color));
             if (record.Color.Alpha != 255)
                 entry.SetAttributeValue("stop-opacity", record.Color.Alpha / 255.0);
             gradient.Add(entry);
+
+            if (lastRatio >= 255) break;
+
+            prev = record;
         }
     }
 
