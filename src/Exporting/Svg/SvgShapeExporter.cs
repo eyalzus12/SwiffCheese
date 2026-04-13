@@ -9,12 +9,29 @@ using SwiffCheese.Wrappers;
 namespace SwiffCheese.Exporting.Svg;
 
 public readonly record struct SvgSize(double Width, double Height);
-public readonly record struct SvgMatrix(double ScaleX = 1, double RotateSkew0 = 0, double RotateSkew1 = 0, double ScaleY = 1, double TranslateX = 0, double TranslateY = 0);
-
-public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporter
+public readonly record struct SvgMatrix(
+    double ScaleX, double RotateSkew0,
+    double RotateSkew1, double ScaleY,
+    double TranslateX, double TranslateY
+)
 {
+    public SvgMatrix() : this(1, 0, 0, 1, 0, 0) { }
+}
 
+public readonly record struct SvgColorTransform(
+    double RedMult, double RedAdd,
+    double GreenMult, double GreenAdd,
+    double BlueMult, double BlueAdd,
+    double AlphaMult, double AlphaAdd
+)
+{
+    public SvgColorTransform() : this(1, 0, 1, 0, 1, 0, 1, 0) { }
+}
+
+public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransform colorTransform) : IShapeExporter
+{
     private const double SWF_UNIT_DIVISOR = 20;
+    private const double SWF_GRADIENT_SIZE = 819.2;
     private readonly XNamespace xmlns = XNamespace.Get("http://www.w3.org/2000/svg");
 
     public XDocument Document { get; private set; } = null!;
@@ -42,17 +59,40 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
 
     public void BeginShape()
     {
-        string transformString = SvgUtils.SvgMatrixString(
-            transform.ScaleX, transform.RotateSkew0, transform.RotateSkew1, transform.ScaleY,
-            transform.TranslateX, transform.TranslateY
-        );
-
-        _group = new XElement(xmlns + "g");
-        _group.SetAttributeValue("transform", transformString);
-
-        _svg = new(xmlns + "svg", _group);
+        _svg = new(xmlns + "svg");
         _svg.SetAttributeValue("width", size.Width);
         _svg.SetAttributeValue("height", size.Height);
+
+        _group = new XElement(xmlns + "g");
+        _svg.Add(_group);
+
+        if (transform != new SvgMatrix())
+        {
+            string transformString = SvgUtils.SvgMatrixString(
+                transform.ScaleX, transform.RotateSkew0,
+                transform.RotateSkew1, transform.ScaleY,
+                transform.TranslateX, transform.TranslateY
+            );
+            _group.SetAttributeValue("transform", transformString);
+        }
+
+        if (colorTransform != new SvgColorTransform())
+        {
+            string colorTransformString = SvgUtils.SvgColorMatrixString(
+                colorTransform.RedMult, colorTransform.RedAdd,
+                colorTransform.GreenMult, colorTransform.GreenAdd,
+                colorTransform.BlueMult, colorTransform.BlueAdd,
+                colorTransform.AlphaMult, colorTransform.AlphaAdd
+            );
+            XElement feColorMatrix = new(xmlns + "feColorMatrix");
+            feColorMatrix.SetAttributeValue("values", colorTransformString);
+
+            XElement filter = new(xmlns + "filter", feColorMatrix);
+            filter.SetAttributeValue("id", "cxform");
+
+            Defs.Add(filter);
+            _group.SetAttributeValue("filter", "url(#cxform)");
+        }
 
         Document = new(new XDeclaration("1.0", "UTF-8", "no"), _svg);
 
@@ -213,19 +253,19 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform) : IShapeExporte
         // linear
         if (focalPointRatio is null)
         {
-            gradient.SetAttributeValue("x1", "-819.2");
-            gradient.SetAttributeValue("x2", "819.2");
+            gradient.SetAttributeValue("x1", -SWF_GRADIENT_SIZE);
+            gradient.SetAttributeValue("x2", SWF_GRADIENT_SIZE);
         }
         // radial or focal
         else
         {
-            gradient.SetAttributeValue("r", "819.2");
-            gradient.SetAttributeValue("cx", "0");
-            gradient.SetAttributeValue("cy", "0");
+            gradient.SetAttributeValue("r", SWF_GRADIENT_SIZE);
+            gradient.SetAttributeValue("cx", 0);
+            gradient.SetAttributeValue("cy", 0);
             if (focalPointRatio != 0)
             {
-                gradient.SetAttributeValue("fx", 819.2 * focalPointRatio);
-                gradient.SetAttributeValue("fy", "0");
+                gradient.SetAttributeValue("fx", SWF_GRADIENT_SIZE * focalPointRatio);
+                gradient.SetAttributeValue("fy", 0);
             }
         }
 
