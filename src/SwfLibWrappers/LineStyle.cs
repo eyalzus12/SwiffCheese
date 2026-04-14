@@ -8,8 +8,7 @@ public readonly struct LineStyle
     public SwfColor Color { get; }
     public CapStyle StartCapStyle { get; }
     public JoinStyle JoinStyle { get; }
-    public bool NoHScale { get; }
-    public bool NoVScale { get; }
+    public StrokeScaleMode StrokeScaleMode { get; }
     public bool PixelHinting { get; }
     public bool NoClose { get; }
     public CapStyle EndCapStyle { get; }
@@ -34,8 +33,13 @@ public readonly struct LineStyle
         Color = ex.Color;
         StartCapStyle = ex.StartCapStyle;
         JoinStyle = ex.JoinStyle;
-        NoHScale = ex.NoHScale;
-        NoVScale = ex.NoVScale;
+        StrokeScaleMode = ex.NoVScale && ex.NoHScale
+            ? StrokeScaleMode.None
+            : ex.NoVScale // && !ex.NoHScale
+                ? StrokeScaleMode.HorizontalOnly
+                : ex.NoHScale // && !ex.NoVScale
+                    ? StrokeScaleMode.VerticalOnly
+                    : StrokeScaleMode.Normal;
         PixelHinting = ex.PixelHinting;
         NoClose = ex.NoClose;
         EndCapStyle = ex.EndCapStyle;
@@ -50,4 +54,12 @@ public readonly struct LineStyle
     public static implicit operator LineStyle(LineStyleRGB rgb) => new(rgb);
     public static implicit operator LineStyle(LineStyleRGBA rgba) => new(rgba);
     public static implicit operator LineStyle(LineStyleEx ex) => new(ex);
+}
+
+public enum StrokeScaleMode
+{
+    Normal,
+    HorizontalOnly,
+    VerticalOnly,
+    None,
 }

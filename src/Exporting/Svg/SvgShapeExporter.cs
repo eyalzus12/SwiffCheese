@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using SwfLib.Data;
 using SwfLib.Gradients;
 using SwfLib.Shapes.FillStyles;
+using SwfLib.Shapes.LineStyles;
 using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
@@ -160,7 +161,7 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         FinalizePath();
     }
 
-    public void LineStyle(float thickness = float.NaN, SwfColor color = default)
+    public void LineStyle(float thickness, SwfColor color, bool pixelHinting, StrokeScaleMode scaleMode, CapStyle startCaps, CapStyle endCaps, JoinStyle joints, double miterLimit, bool noClose)
     {
         FinalizePath();
         double strokeWidth = thickness / SWF_UNIT_DIVISOR;
@@ -169,8 +170,36 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         _path.SetAttributeValue("stroke-width", strokeWidth);
         if (color.Alpha != 255)
             _path.SetAttributeValue("stroke-opacity", color.Alpha / 255.0);
-        _path.SetAttributeValue("stroke-linecap", "round");
-        _path.SetAttributeValue("stroke-linejoin", "miter-clip");
+
+        _path.SetAttributeValue("stroke-linecap", startCaps switch
+        {
+            CapStyle.Round => "round",
+            CapStyle.NoCap => "butt",
+            CapStyle.Square => "square",
+            _ => "round",
+        });
+
+        // svg does not support changing the cap style of each end separately
+
+        _path.SetAttributeValue("stroke-linejoin", joints switch
+        {
+            JoinStyle.Round => "round",
+            JoinStyle.Bevel => "bevel",
+            JoinStyle.Miter => "miter-clip",
+            _ => "round",
+        });
+        if (joints == JoinStyle.Miter && miterLimit >= 1)
+        {
+            _path.SetAttributeValue("stroke-miterlimit", miterLimit);
+        }
+
+        // svg only supports scaling and no scaling (can't do only horizontal or vertical)
+        if (scaleMode == StrokeScaleMode.None)
+        {
+            _path.SetAttributeValue("vector-effect", "non-scaling-stroke");
+        }
+
+        // svg does not support using caps instead of a join at the end of a closed stroke (noClose)
     }
 
     public void MoveTo(Vector2I pos)

@@ -125,11 +125,24 @@ public class SwfShape(DefineShapeXTag shape)
                 pos = new(int.MaxValue, int.MaxValue);
 
                 if (lineStyleIndex == 0)
-                    exporter.LineStyle(0, new SwfRGB(0, 0, 0));
+                    // fallback
+                    exporter.LineStyle(0, new SwfRGB(0, 0, 0), false, 0, 0, 0, 0, 3, false);
                 else
                 {
                     LineStyle lineStyle = shape.LineStyles[lineStyleIndex - 1];
-                    exporter.LineStyle(lineStyle.Width, lineStyle.Color);
+                    exporter.LineStyle(
+                        lineStyle.Width,
+                        lineStyle.Color,
+                        lineStyle.PixelHinting,
+                        lineStyle.StrokeScaleMode,
+                        lineStyle.StartCapStyle,
+                        lineStyle.EndCapStyle,
+                        lineStyle.JoinStyle,
+                        lineStyle.MilterLimitFactor,
+                        lineStyle.NoClose
+                    );
+
+                    // TODO: fill style (LINESTYLE2)
                 }
             }
 
