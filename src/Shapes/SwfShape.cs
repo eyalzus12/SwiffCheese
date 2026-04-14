@@ -29,7 +29,7 @@ public class SwfShape(DefineShapeXTag shape)
     public void Export(IShapeExporter handler)
     {
         CreateEdgeMaps();
-        handler.BeginShape();
+        handler.BeginShape(shape.WindingRule);
         for (int i = 0; i < _numGroups; ++i)
         {
             ExportFillPath(handler, i);
@@ -57,7 +57,7 @@ public class SwfShape(DefineShapeXTag shape)
                 pos = new(int.MaxValue, int.MaxValue);
 
                 if (fillStyleIdx == 0)
-                    exporter.BeginFill(new SwfRGB(0, 0, 0));
+                    exporter.BeginSolidFill(new SwfRGB(0, 0, 0));
                 else
                 {
                     FillStyle fillStyle = shape.FillStyles[fillStyleIdx - 1];
@@ -65,7 +65,7 @@ public class SwfShape(DefineShapeXTag shape)
                     {
                         case FillStyleType.SolidColor:
                             SolidFillStyle solidFillStyle = fillStyle.ToSolidFillStyle();
-                            exporter.BeginFill(solidFillStyle.Color);
+                            exporter.BeginSolidFill(solidFillStyle.Color);
                             break;
                         case FillStyleType.LinearGradient:
                             LinearGradientFillStyle linear = fillStyle.ToLinearGradientFillStyle();
@@ -83,8 +83,9 @@ public class SwfShape(DefineShapeXTag shape)
                         case FillStyleType.ClippedBitmap:
                         case FillStyleType.NonSmoothedRepeatingBitmap:
                         case FillStyleType.NonSmoothedClippedBitmap:
+                            BitmapFillStyle bitmap = fillStyle.ToBitmapFillStyle();
+                            exporter.BeginBitmapFill(bitmap.BitmapID, bitmap.BitmapMatrix, bitmap.Smoothing, bitmap.Mode);
                             break;
-                            throw new NotImplementedException($"Unsupported fill style type {fillStyle.Type}");
                         default:
                             throw new ArgumentException($"Invalid fill style type {fillStyle.Type}");
                     }

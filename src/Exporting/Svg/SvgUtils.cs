@@ -28,4 +28,11 @@ public static class SvgUtils
     {
         return $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
     }
+
+    public static string WindingRuleToString(WindingRule windingRule) => windingRule switch
+    {
+        WindingRule.EvenOdd => "evenodd",
+        WindingRule.NonZero => "nonzero",
+        _ => "evenodd",
+    };
 }

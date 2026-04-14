@@ -37,9 +37,15 @@ public readonly struct DefineShapeXTag(ShapeBaseTag shape)
         _ => throw new ArgumentException(),
     };
     public SwfTagType TagType { get; } = shape.TagType;
-    public bool UsesFillWindingRule { get; } = shape is DefineShape4Tag shape4 && shape4.UsesFillWindingRule;
+    public WindingRule WindingRule { get; } = shape is DefineShape4Tag shape4 && shape4.UsesFillWindingRule ? WindingRule.NonZero : WindingRule.EvenOdd;
     public bool UsesNonScalingStrokes { get; } = shape is DefineShape4Tag shape4 && shape4.UsesNonScalingStrokes;
     public bool UsesScalingStrokes { get; } = shape is DefineShape4Tag shape4 && shape4.UsesScalingStrokes;
 
     public static implicit operator DefineShapeXTag(ShapeBaseTag shape) => new(shape);
+}
+
+public enum WindingRule
+{
+    EvenOdd,
+    NonZero,
 }

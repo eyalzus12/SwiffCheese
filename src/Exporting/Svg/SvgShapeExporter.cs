@@ -3,30 +3,11 @@ using System.Text;
 using System.Xml.Linq;
 using SwfLib.Data;
 using SwfLib.Gradients;
+using SwfLib.Shapes.FillStyles;
 using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
 namespace SwiffCheese.Exporting.Svg;
-
-public readonly record struct SvgSize(double Width, double Height);
-public readonly record struct SvgMatrix(
-    double ScaleX, double RotateSkew0,
-    double RotateSkew1, double ScaleY,
-    double TranslateX, double TranslateY
-)
-{
-    public SvgMatrix() : this(1, 0, 0, 1, 0, 0) { }
-}
-
-public readonly record struct SvgColorTransform(
-    double RedMult, double RedAdd,
-    double GreenMult, double GreenAdd,
-    double BlueMult, double BlueAdd,
-    double AlphaMult, double AlphaAdd
-)
-{
-    public SvgColorTransform() : this(1, 0, 1, 0, 1, 0, 1, 0) { }
-}
 
 public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransform colorTransform) : IShapeExporter
 {
@@ -36,6 +17,7 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
 
     public XDocument Document { get; private set; } = null!;
 
+    private WindingRule _windingRule;
     private string _currentDrawCommand = "";
     private readonly StringBuilder _pathData = new();
     private XElement _svg = null!;
@@ -57,8 +39,10 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         }
     }
 
-    public void BeginShape()
+    public void BeginShape(WindingRule windingRule)
     {
+        _windingRule = windingRule;
+
         _svg = new(xmlns + "svg");
         _svg.SetAttributeValue("width", size.Width);
         _svg.SetAttributeValue("height", size.Height);
@@ -128,12 +112,12 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         FinalizePath();
     }
 
-    public void BeginFill(SwfColor color)
+    public void BeginSolidFill(SwfColor color)
     {
         FinalizePath();
         _path.SetAttributeValue("stroke", "none");
         _path.SetAttributeValue("fill", SvgUtils.ColorToHexString(color));
-        _path.SetAttributeValue("fill-rule", "evenodd");
+        _path.SetAttributeValue("fill-rule", SvgUtils.WindingRuleToString(_windingRule));
         if (color.Alpha != 255)
             _path.SetAttributeValue("fill-opacity", color.Alpha / 255.0f);
     }
@@ -160,6 +144,15 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         XElement gradientElement = new(xmlns + "radialGradient");
         PopulateGradientElement(gradientElement, gradient.GradientRecords, gradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, gradient.FocalPoint);
         AddGradientElement(gradientElement);
+    }
+
+    public void BeginBitmapFill(ushort bitmapId, SwfMatrix bitmapMatrix, bool smoothing, BitmapMode mode)
+    {
+        // TODO: implement
+        FinalizePath();
+        _path.SetAttributeValue("stroke", "none");
+        _path.SetAttributeValue("fill", "none");
+        _path.SetAttributeValue("fill-rule", SvgUtils.WindingRuleToString(_windingRule));
     }
 
     public void EndFill()
@@ -318,7 +311,7 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
         gradientElement.SetAttributeValue("id", gradientId);
         _path.SetAttributeValue("stroke", "none");
         _path.SetAttributeValue("fill", $"url(#{gradientId})");
-        _path.SetAttributeValue("fill-rule", "evenodd");
+        _path.SetAttributeValue("fill-rule", SvgUtils.WindingRuleToString(_windingRule));
         Defs.Add(gradientElement);
     }
 }
