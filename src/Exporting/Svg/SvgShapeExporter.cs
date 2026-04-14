@@ -138,30 +138,27 @@ public class SvgShapeExporter(SvgSize size, SvgMatrix transform, SvgColorTransfo
             _path.SetAttributeValue("fill-opacity", color.Alpha / 255.0f);
     }
 
-    public void BeginLinearGradientFill(LinearGradientFillStyle fillStyle)
+    public void BeginLinearGradientFill(SwfMatrix gradientMatrix, SwfGradient gradient)
     {
         FinalizePath();
         XElement gradientElement = new(xmlns + "linearGradient");
-        SwfGradient gradient = fillStyle.Gradient;
-        PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode);
+        PopulateGradientElement(gradientElement, gradient.GradientRecords, gradientMatrix, gradient.SpreadMode, gradient.InterpolationMode);
         AddGradientElement(gradientElement);
     }
 
-    public void BeginRadialGradientFill(RadialGradientFillStyle fillStyle)
+    public void BeginRadialGradientFill(SwfMatrix gradientMatrix, SwfGradient gradient)
     {
         FinalizePath();
         XElement gradientElement = new(xmlns + "radialGradient");
-        SwfGradient gradient = fillStyle.Gradient;
-        PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, 0);
+        PopulateGradientElement(gradientElement, gradient.GradientRecords, gradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, 0);
         AddGradientElement(gradientElement);
     }
 
-    public void BeginFocalGradientFill(FocalGradientFillStyle fillStyle)
+    public void BeginFocalGradientFill(SwfMatrix gradientMatrix, SwfFocalGradient gradient)
     {
         FinalizePath();
         XElement gradientElement = new(xmlns + "radialGradient");
-        SwfFocalGradient gradient = fillStyle.Gradient;
-        PopulateGradientElement(gradientElement, gradient.GradientRecords, fillStyle.GradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, gradient.FocalPoint);
+        PopulateGradientElement(gradientElement, gradient.GradientRecords, gradientMatrix, gradient.SpreadMode, gradient.InterpolationMode, gradient.FocalPoint);
         AddGradientElement(gradientElement);
     }
 

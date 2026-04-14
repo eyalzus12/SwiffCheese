@@ -1,3 +1,4 @@
+using SwfLib.Data;
 using SwiffCheese.Math;
 using SwiffCheese.Wrappers;
 
@@ -12,9 +13,9 @@ public interface IShapeExporter
     void BeginLines();
     void EndLines(bool close);
     void BeginFill(SwfColor color);
-    void BeginLinearGradientFill(LinearGradientFillStyle fillStyle);
-    void BeginRadialGradientFill(RadialGradientFillStyle fillStyle);
-    void BeginFocalGradientFill(FocalGradientFillStyle fillStyle);
+    void BeginLinearGradientFill(SwfMatrix gradientMatrix, SwfGradient gradient);
+    void BeginRadialGradientFill(SwfMatrix gradientMatrix, SwfGradient gradient);
+    void BeginFocalGradientFill(SwfMatrix gradientMatrix, SwfFocalGradient gradient);
     void EndFill();
     void LineStyle(float thickness = float.NaN, SwfColor color = default);
     void MoveTo(Vector2I pos);

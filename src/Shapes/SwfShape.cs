@@ -3,24 +3,20 @@ using System.Linq;
 using System.Collections.Generic;
 using SwfLib.Shapes.Records;
 using SwfLib.Shapes.FillStyles;
+using SwfLib.Data;
 using SwiffCheese.Edges;
 using SwiffCheese.Exporting;
 using SwiffCheese.Wrappers;
+using SwiffCheese.Math;
 
 using EdgeMap = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using CoordMap = System.Collections.Generic.Dictionary<SwiffCheese.Math.Vector2I, System.Collections.Generic.List<SwiffCheese.Edges.IEdge>>;
 using Path = System.Collections.Generic.List<SwiffCheese.Edges.IEdge>;
-using SwfLib.Data;
-using SwiffCheese.Math;
 
 namespace SwiffCheese.Shapes;
 
 public class SwfShape(DefineShapeXTag shape)
 {
-    private readonly List<ShapeRecord> _records = [.. shape.ShapeRecords];
-    private readonly List<FillStyle> _fillStyles = [.. shape.FillStyles];
-    private readonly List<LineStyle> _lineStyles = [.. shape.LineStyles];
-
     private readonly List<EdgeMap> _fillEdgesMaps = [];
     private EdgeMap _currentFillEdgeMap = [];
     private readonly List<EdgeMap> _lineEdgeMaps = [];
@@ -64,7 +60,7 @@ public class SwfShape(DefineShapeXTag shape)
                     exporter.BeginFill(new SwfRGB(0, 0, 0));
                 else
                 {
-                    FillStyle fillStyle = _fillStyles[fillStyleIdx - 1];
+                    FillStyle fillStyle = shape.FillStyles[fillStyleIdx - 1];
                     switch (fillStyle.Type)
                     {
                         case FillStyleType.SolidColor:
@@ -72,16 +68,16 @@ public class SwfShape(DefineShapeXTag shape)
                             exporter.BeginFill(solidFillStyle.Color);
                             break;
                         case FillStyleType.LinearGradient:
-                            LinearGradientFillStyle linearGradientFillStyle = fillStyle.ToLinearGradientFillStyle();
-                            exporter.BeginLinearGradientFill(linearGradientFillStyle);
+                            LinearGradientFillStyle linear = fillStyle.ToLinearGradientFillStyle();
+                            exporter.BeginLinearGradientFill(linear.GradientMatrix, linear.Gradient);
                             break;
                         case FillStyleType.RadialGradient:
-                            RadialGradientFillStyle radialGradientFillStyle = fillStyle.ToRadialGradientFillStyle();
-                            exporter.BeginRadialGradientFill(radialGradientFillStyle);
+                            RadialGradientFillStyle radial = fillStyle.ToRadialGradientFillStyle();
+                            exporter.BeginRadialGradientFill(radial.GradientMatrix, radial.Gradient);
                             break;
                         case FillStyleType.FocalGradient:
-                            FocalGradientFillStyle focalGradientFillStyle = fillStyle.ToFocalGradientFillStyle();
-                            exporter.BeginFocalGradientFill(focalGradientFillStyle);
+                            FocalGradientFillStyle focal = fillStyle.ToFocalGradientFillStyle();
+                            exporter.BeginFocalGradientFill(focal.GradientMatrix, focal.Gradient);
                             break;
                         case FillStyleType.RepeatingBitmap:
                         case FillStyleType.ClippedBitmap:
@@ -131,7 +127,7 @@ public class SwfShape(DefineShapeXTag shape)
                     exporter.LineStyle(0, new SwfRGB(0, 0, 0));
                 else
                 {
-                    LineStyle lineStyle = _lineStyles[lineStyleIndex - 1];
+                    LineStyle lineStyle = shape.LineStyles[lineStyleIndex - 1];
                     exporter.LineStyle(lineStyle.Width, lineStyle.Color);
                 }
             }
@@ -172,7 +168,7 @@ public class SwfShape(DefineShapeXTag shape)
         _currentFillEdgeMap.Clear();
         _currentLineEdgeMap.Clear();
 
-        foreach (ShapeRecord shapeRecord in _records)
+        foreach (ShapeRecord shapeRecord in shape.ShapeRecords)
         {
             switch (shapeRecord.Type)
             {
@@ -188,10 +184,10 @@ public class SwfShape(DefineShapeXTag shape)
 
                     if (styleChangeRecord.StateNewStyles)
                     {
-                        fillStyleIndexOffset = _fillStyles.Count;
-                        lineStyleIndexOffset = _lineStyles.Count;
-                        _fillStyles.AddRange(styleChangeRecord.FillStyles);
-                        _lineStyles.AddRange(styleChangeRecord.LineStyles);
+                        fillStyleIndexOffset = shape.FillStyles.Count;
+                        lineStyleIndexOffset = shape.LineStyles.Count;
+                        shape.FillStyles.AddRange(styleChangeRecord.FillStyles);
+                        shape.LineStyles.AddRange(styleChangeRecord.LineStyles);
                     }
 
                     if (styleChangeRecord.LineStyle is not null && styleChangeRecord.LineStyle == 0 &&
@@ -272,23 +268,20 @@ public class SwfShape(DefineShapeXTag shape)
     {
         if (fillStyleIdx0 != 0)
         {
-            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx0)) _currentFillEdgeMap[fillStyleIdx0] = [];
-            _currentFillEdgeMap[fillStyleIdx0].AddRange(
-                subPath.Select(e => e.ReverseWithStyle(fillStyleIdx0)).Reverse()
-            );
+            _currentFillEdgeMap.TryAdd(fillStyleIdx0, []);
+            IEnumerable<IEdge> reversedPath = subPath.Select(e => e.ReverseWithStyle(fillStyleIdx0)).Reverse();
+            _currentFillEdgeMap[fillStyleIdx0].AddRange(reversedPath);
         }
 
         if (fillStyleIdx1 != 0)
         {
-            if (!_currentFillEdgeMap.ContainsKey(fillStyleIdx1)) _currentFillEdgeMap[fillStyleIdx1] = [];
-
+            _currentFillEdgeMap.TryAdd(fillStyleIdx1, []);
             _currentFillEdgeMap[fillStyleIdx1].AddRange(subPath);
         }
 
         if (lineStyleIdx != 0)
         {
-            if (!_currentLineEdgeMap.ContainsKey(lineStyleIdx)) _currentLineEdgeMap[lineStyleIdx] = [];
-
+            _currentLineEdgeMap.TryAdd(lineStyleIdx, []);
             _currentLineEdgeMap[lineStyleIdx].AddRange(subPath);
         }
     }
